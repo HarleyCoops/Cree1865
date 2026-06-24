@@ -10,7 +10,7 @@ Inspired by the Stoney Nakoda language preservation project by @harleycoops.
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 from datetime import datetime
 
 try:
@@ -34,6 +34,7 @@ class PageProcessor:
         output_dir: str = "data/extracted",
         reasoning_dir: str = "data/reasoning_traces",
         model: str = DEFAULT_ANTHROPIC_MODEL,
+        prompt_builder: Optional[Callable[[], str]] = None,
     ):
         """
         Initialize the page processor.
@@ -43,6 +44,7 @@ class PageProcessor:
             output_dir: Directory for structured extraction output
             reasoning_dir: Directory for reasoning traces
             model: Claude model to use
+            prompt_builder: Optional callable for custom extraction prompts
         """
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
@@ -50,6 +52,7 @@ class PageProcessor:
 
         self.client = anthropic.Anthropic(api_key=self.api_key)
         self.model = model
+        self.prompt_builder = prompt_builder
         self.output_dir = Path(output_dir)
         self.reasoning_dir = Path(reasoning_dir)
 
@@ -139,7 +142,8 @@ class PageProcessor:
         # Save extraction
         self._save_extraction(page_number, extraction)
 
-        print(f" Extracted {len(extraction.get('entries', []))} entries")
+        unit_label, unit_count = self._summarize_extraction(extraction)
+        print(f" Extracted {unit_count} {unit_label}")
         print(f" Input tokens: {response.usage.input_tokens}")
         print(f" Output tokens: {response.usage.output_tokens}")
 
@@ -147,6 +151,9 @@ class PageProcessor:
 
     def _build_extraction_prompt(self) -> str:
         """Build the extraction prompt for the model."""
+        if self.prompt_builder is not None:
+            return self.prompt_builder()
+
         return """Analyze this historical Dakota language dictionary page from 1890.
 
 **Your Task:**
@@ -284,6 +291,16 @@ Provide ONLY the JSON output, no other text."""
             f.write(f"{'='*60}\n\n")
             f.write(response_text)
         print(f" Saved response to: {response_path}")
+
+    def _summarize_extraction(self, extraction: Dict[str, Any]) -> tuple[str, int]:
+        """Return a human-readable count for dictionary or grammar extraction payloads."""
+        if "entries" in extraction:
+            return "entries", len(extraction.get("entries", []))
+        if "grammar_rules" in extraction:
+            return "grammar rules", len(extraction.get("grammar_rules", []))
+        if "interlinear_examples" in extraction:
+            return "interlinear examples", len(extraction.get("interlinear_examples", []))
+        return "items", 0
 
     def batch_extract(
         self,

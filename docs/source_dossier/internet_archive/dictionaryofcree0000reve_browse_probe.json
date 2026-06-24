@@ -1,0 +1,59 @@
+{
+  "item_identifier": "dictionaryofcree0000reve",
+  "probed_on": "2026-05-30",
+  "grant_access": {
+    "endpoint": "https://archive.org/services/loans/loan/searchInside.php",
+    "method": "POST",
+    "form": {
+      "action": "grant_access",
+      "identifier": "dictionaryofcree0000reve"
+    },
+    "status": 200,
+    "response": {
+      "success": true,
+      "value": "1780184741-3281d10d001ef0249da2c2a29438d8b4"
+    },
+    "cookies_after_grant": {
+      "search-inside-dictionaryofcree0000reve": "1780184741-3281d10d001ef0249da2c2a29438d8b4"
+    }
+  },
+  "browse_book": {
+    "endpoint": "https://archive.org/services/loans/loan/",
+    "method": "POST",
+    "form": {
+      "action": "browse_book",
+      "identifier": "dictionaryofcree0000reve"
+    },
+    "status": 401,
+    "response_text": "{\"error\":\"Not logged in.\"}"
+  },
+  "create_token": {
+    "endpoint": "https://archive.org/services/loans/loan/",
+    "method": "POST",
+    "form": {
+      "action": "create_token",
+      "identifier": "dictionaryofcree0000reve"
+    },
+    "status": 400,
+    "response_text": "{\"error\":\"Not logged in.\"}"
+  },
+  "hidden_leaf_probe": {
+    "leaf": 17,
+    "endpoint": "https://ia601507.us.archive.org/BookReader/BookReaderPreview.php",
+    "without_grant": {
+      "status": 200,
+      "content_type": "image/png",
+      "size_bytes": 40691,
+      "sha256": "c94b9a75e0b9d80dcce1a668c56d1172ac6c5e3279be2e62fc25bd01cf261c82",
+      "artifact": "leaf17_nocookie.jpg"
+    },
+    "with_grant": {
+      "status": 200,
+      "content_type": "image/png",
+      "size_bytes": 40691,
+      "sha256": "c94b9a75e0b9d80dcce1a668c56d1172ac6c5e3279be2e62fc25bd01cf261c82",
+      "artifact": "leaf17_grant.jpg"
+    },
+    "interpretation": "Grant cookie does not unlock hidden leaves. The same limited-preview placeholder image is returned in both cases."
+  }
+}

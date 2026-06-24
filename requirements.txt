@@ -20,6 +20,8 @@ matplotlib>=3.8.0
 
 # Image processing for vision tasks
 Pillow>=10.0.0
+PyMuPDF>=1.24.0
+pypdf>=4.2.0
 
 # Dataset publishing and model hub integration
 huggingface-hub>=0.34.0

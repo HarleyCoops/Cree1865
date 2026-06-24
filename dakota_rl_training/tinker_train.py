@@ -54,6 +54,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--log-path", default="dakota_rl_training/outputs/tinker_run", help="Directory for logs/checkpoints.")
     parser.add_argument("--dataset-path", default=None, help="Optional override JSONL dataset.")
     parser.add_argument("--eval-path", default=None, help="Optional eval split JSONL.")
+    parser.add_argument("--renderer-name", default=None, help="Optional Tinker renderer override.")
     parser.add_argument("--batch-size", type=int, default=32, help="Number of env groups per batch.")
     parser.add_argument("--group-size", type=int, default=16, help="Rollouts per GRPO group.")
     parser.add_argument("--max-examples", type=int, default=-1, help="Limit number of training examples.")
@@ -97,6 +98,7 @@ def build_dataset_builder(args: argparse.Namespace) -> DakotaGrammarDatasetBuild
         group_size=args.group_size,
         dataset_path=args.dataset_path,
         eval_path=args.eval_path,
+        renderer_name=args.renderer_name,
         max_examples=args.max_examples,
         eval_examples=args.eval_examples,
         eval_fraction=args.eval_fraction,

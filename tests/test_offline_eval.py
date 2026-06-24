@@ -1,3 +1,10 @@
+from pathlib import Path
+
+import pytest
+
+if not Path("eval/score_extraction.py").exists():
+    pytest.skip("offline eval package was not copied into Cree1865", allow_module_level=True)
+
 from eval.score_extraction import load_pairs, score_pairs
 
 

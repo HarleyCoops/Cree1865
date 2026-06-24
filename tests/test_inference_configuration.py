@@ -5,17 +5,23 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from hf_inference_standalone import BASE_MODEL_ID, MODEL_ID
 from run_inference import ADAPTER_NAME, BASE_MODEL_NAME
 
 
+ADAPTER_CONFIG_PATH = Path(
+    "hf_model_card_work/Qwen3.6-35B-A3B-Dakota1890-GRPO/downloaded_adapter/adapter_config.json"
+)
+
+if not ADAPTER_CONFIG_PATH.exists():
+    pytest.skip("Dakota adapter export cache is not present in Cree1865", allow_module_level=True)
+
+
 def test_local_inference_base_matches_saved_adapter_config() -> None:
     """The local inference base model should match the saved adapter metadata."""
-    adapter_config = json.loads(
-        Path(
-            "hf_model_card_work/Qwen3.6-35B-A3B-Dakota1890-GRPO/downloaded_adapter/adapter_config.json"
-        ).read_text(encoding="utf-8")
-    )
+    adapter_config = json.loads(ADAPTER_CONFIG_PATH.read_text(encoding="utf-8"))
 
     assert BASE_MODEL_NAME == adapter_config["base_model_name_or_path"]
     assert BASE_MODEL_NAME == BASE_MODEL_ID

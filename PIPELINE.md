@@ -34,9 +34,11 @@ That is acceptable at bootstrap time. The rule for this repo is:
 
 ## Cree-Specific Starting Assumptions
 
-- pages `1-24` are likely preface/basic grammar
-- pages after `24` are likely dictionary-focused
-- a second volume is missing and may affect schema design
+- pages `1-28` contain front matter, pronunciation guidance, and early grammar notes
+- page `29` is the first confirmed dictionary page
+- the current structured extraction path is pinned to `Part I. English -> Cree`
+- the reverse `Part II. Cree -> English` transition lands around printed page `183`, which corresponds to PDF pages `211-212` in the local scan
+- `Part II` needs its own Cree-headword schema before live extraction should be treated as reliable
 
 ## First Adaptation Targets
 
@@ -45,3 +47,8 @@ That is acceptable at bootstrap time. The rule for this repo is:
 3. orthography and prompt updates
 4. grammar extraction schema for the shorter front matter
 5. publication path reuse for the eventual Cree model
+
+## Current Validation Surface
+
+- Offline bootstrap validation: `python scripts/cree/validate_cree_bootstrap.py`
+- Live dictionary extraction runner: `python scripts/cree/run_cree_pipeline.py --dictionary-pages 29 40 100`

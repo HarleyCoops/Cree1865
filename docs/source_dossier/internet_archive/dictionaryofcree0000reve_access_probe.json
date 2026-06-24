@@ -1,0 +1,67 @@
+{
+  "item_identifier": "dictionaryofcree0000reve",
+  "probed_on": "2026-05-30",
+  "metadata_endpoint": {
+    "url": "https://archive.org/metadata/dictionaryofcree0000reve",
+    "status": 200,
+    "access_restricted_item": true,
+    "collection": [
+      "internetarchivebooks",
+      "inlibrary",
+      "printdisabled"
+    ]
+  },
+  "download_surface": [
+    {
+      "url": "https://archive.org/download/dictionaryofcree0000reve/dictionaryofcree0000reve.pdf",
+      "method": "HEAD",
+      "status": 401
+    },
+    {
+      "url": "https://archive.org/download/dictionaryofcree0000reve/dictionaryofcree0000reve_jp2.zip",
+      "method": "HEAD",
+      "status": 401
+    },
+    {
+      "url": "https://archive.org/download/dictionaryofcree0000reve/dictionaryofcree0000reve_djvu.txt",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "https://archive.org/download/dictionaryofcree0000reve/dictionaryofcree0000reve_archive.torrent",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "url": "https://ia601507.us.archive.org/BookReader/BookReaderJSIA.php?id=dictionaryofcree0000reve&itemPath=/30/items/dictionaryofcree0000reve&server=ia601507.us.archive.org&format=jsonp&subPrefix=dictionaryofcree0000reve&requestUri=/details/dictionaryofcree0000reve",
+      "method": "GET",
+      "status": 200,
+      "artifact": "dictionaryofcree0000reve_bookreader.jsonp"
+    },
+    {
+      "url": "https://archive.org/services/loans/loan/searchInside.php",
+      "method": "POST",
+      "status": 200,
+      "artifact": "dictionaryofcree0000reve_searchinside_grant.json",
+      "note": "Anonymous search-inside grant returned a short-lived access token cookie."
+    },
+    {
+      "url": "https://archive.org/services/loans/loan/?action=media_url&identifier=dictionaryofcree0000reve&format=webpub",
+      "method": "GET",
+      "status": 200,
+      "artifact": "dictionaryofcree0000reve_webpub_manifest.json",
+      "note": "Returned an OPDS webpub manifest."
+    }
+  ],
+  "preview_surface": {
+    "viewable_leaf_count": 11,
+    "downloaded_preview_leaves": [
+      "dictionaryofcree0000reve_leaf001_ia_preview.png",
+      "dictionaryofcree0000reve_leaf005_ia_preview.png",
+      "dictionaryofcree0000reve_leaf006_ia_preview.png",
+      "dictionaryofcree0000reve_leaf552_ia_preview.png"
+    ],
+    "note": "Preview leaves were fetched from Archive's BookReader preview endpoint and deobfuscated using the site client logic."
+  },
+  "interpretation": "The item is identifiable and its metadata is publicly readable. Direct full-file downloads from the Internet Archive were access-restricted from this environment, but BookReader and OPDS surfaces were directly accessible, and multiple preview leaves were downloaded from the Internet Archive itself. The full working PDF on disk was recovered from a public mirror."
+}

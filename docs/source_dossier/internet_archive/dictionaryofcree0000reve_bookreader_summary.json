@@ -1,0 +1,69 @@
+{
+  "item_identifier": "dictionaryofcree0000reve",
+  "bookreader_jsonp_artifact": "dictionaryofcree0000reve_bookreader.jsonp",
+  "is_restricted": true,
+  "viewable_leaf_count": 11,
+  "viewable_leaves": [
+    {
+      "leafNum": 1,
+      "pageType": "Cover",
+      "pageNum": null
+    },
+    {
+      "leafNum": 2,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 3,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 4,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 5,
+      "pageType": "Title",
+      "pageNum": null
+    },
+    {
+      "leafNum": 6,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 7,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 8,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 9,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 10,
+      "pageType": "Normal",
+      "pageNum": null
+    },
+    {
+      "leafNum": 552,
+      "pageType": "Cover",
+      "pageNum": 536
+    }
+  ],
+  "downloaded_preview_artifacts": [
+    "dictionaryofcree0000reve_leaf001_ia_preview.png",
+    "dictionaryofcree0000reve_leaf005_ia_preview.png",
+    "dictionaryofcree0000reve_leaf006_ia_preview.png",
+    "dictionaryofcree0000reve_leaf552_ia_preview.png"
+  ]
+}

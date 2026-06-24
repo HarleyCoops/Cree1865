@@ -12,6 +12,7 @@ RL Rule Format:
 """
 
 import json
+import re
 from pathlib import Path
 from typing import List, Dict
 from dataclasses import dataclass, asdict
@@ -73,6 +74,21 @@ def extract_positive_examples(grammar_rule: dict) -> List[Dict[str, str]]:
             }
             examples.append(example)
 
+    if examples:
+        return examples
+
+    for transformation in grammar_rule.get('transformations', []):
+        transformed_form = transformation.get('transformed_form')
+        if not transformed_form:
+            continue
+        example = {
+            'dakota': transformed_form,
+            'english': transformation.get('gloss_transformed', ''),
+            'gloss': transformation.get('gloss_base', ''),
+            'notes': transformation.get('phonological_changes', '') or ''
+        }
+        examples.append(example)
+
     return examples
 
 
@@ -95,6 +111,19 @@ def generate_negative_examples(dakota_pattern: str, positive_examples: List[Dict
 
 def estimate_difficulty(rule: dict) -> str:
     """Estimate rule difficulty based on complexity."""
+    explicit_difficulty = rule.get('difficulty')
+    if explicit_difficulty:
+        normalized = str(explicit_difficulty).strip().lower()
+        difficulty_map = {
+            'basic': 'easy',
+            'easy': 'easy',
+            'intermediate': 'medium',
+            'medium': 'medium',
+            'advanced': 'hard',
+            'hard': 'hard',
+        }
+        return difficulty_map.get(normalized, normalized)
+
     confidence = rule.get('confidence', 0.5)
     num_examples = len(rule.get('examples', []))
 
@@ -118,29 +147,39 @@ def convert_grammar_rule_to_rl(grammar_rule: dict, page_number: int) -> RLTraini
     """Convert extracted grammar rule to RL training format."""
 
     positive_examples = extract_positive_examples(grammar_rule)
+    rule_pattern = grammar_rule.get('dakota_pattern') or grammar_rule.get('pattern', '')
+    rule_description = grammar_rule.get('rule_description') or grammar_rule.get('description', '')
+    english_explanation = grammar_rule.get('english_explanation') or rule_description
+    constraints = grammar_rule.get('constraints', '')
+    if isinstance(constraints, list):
+        constraints = '; '.join(str(item) for item in constraints if item)
+    verification_criteria = grammar_rule.get('verification_criteria', [])
+    verification_pattern = create_verification_pattern(
+        rule_pattern,
+        grammar_rule.get('rule_type', 'unknown')
+    )
+    if verification_criteria:
+        verification_pattern = ' | '.join(str(item) for item in verification_criteria if item)
     negative_examples = generate_negative_examples(
-        grammar_rule.get('dakota_pattern', ''),
+        rule_pattern,
         positive_examples
     )
 
     return RLTrainingRule(
         rule_id=grammar_rule.get('rule_id', f'rule_p{page_number}_unknown'),
         rule_type=grammar_rule.get('rule_type', 'unknown'),
-        rule_name=grammar_rule.get('rule_description', '').split('.')[0][:100],
-        rule_description=grammar_rule.get('rule_description', ''),
-        dakota_pattern=grammar_rule.get('dakota_pattern', ''),
-        english_explanation=grammar_rule.get('english_explanation', ''),
+        rule_name=(grammar_rule.get('rule_name') or rule_description).split('.')[0][:100],
+        rule_description=rule_description,
+        dakota_pattern=rule_pattern,
+        english_explanation=english_explanation,
         positive_examples=positive_examples,
         negative_examples=negative_examples,
-        verification_pattern=create_verification_pattern(
-            grammar_rule.get('dakota_pattern', ''),
-            grammar_rule.get('rule_type', 'unknown')
-        ),
+        verification_pattern=verification_pattern,
         source_pages=[page_number],
-        confidence=grammar_rule.get('confidence', 0.5),
+        confidence=grammar_rule.get('confidence', grammar_rule.get('extraction_confidence', 0.8)),
         difficulty=estimate_difficulty(grammar_rule),
-        constraints=grammar_rule.get('constraints', ''),
-        linguistic_notes=''
+        constraints=constraints,
+        linguistic_notes='; '.join(str(item) for item in grammar_rule.get('exceptions', []) if item)
     )
 
 
@@ -152,26 +191,36 @@ def extract_interlinear_examples(interlinear: dict, page_number: int) -> List[RL
     text_id = interlinear.get('text_id', f'interlinear_p{page_number}')
 
     # Create a general translation rule from the interlinear
-    if interlinear.get('dakota_lines'):
-        dakota_text = ' '.join(interlinear['dakota_lines'])
+    cree_text = interlinear.get('cree_text')
+    if cree_text:
+        source_text = cree_text
+        gloss = ' '.join(interlinear.get('word_glosses', []))
+    elif interlinear.get('dakota_lines'):
+        source_text = ' '.join(interlinear['dakota_lines'])
+        gloss = ' '.join(interlinear.get('gloss_lines', []))
+    else:
+        source_text = ''
+        gloss = ''
+
+    if source_text:
 
         rule = RLTrainingRule(
             rule_id=f"{text_id}_translation",
             rule_type='translation',
             rule_name=f"Translation example from page {page_number}",
             rule_description="Complete sentence translation with interlinear gloss",
-            dakota_pattern=dakota_text,
+            dakota_pattern=source_text,
             english_explanation=interlinear.get('english_translation', ''),
             positive_examples=[{
-                'dakota': dakota_text,
+                'dakota': source_text,
                 'english': interlinear.get('english_translation', ''),
-                'gloss': ' '.join(interlinear.get('gloss_lines', [])),
+                'gloss': gloss,
                 'notes': interlinear.get('linguistic_notes', '')
             }],
             negative_examples=[],
             verification_pattern='translation_accuracy',
             source_pages=[page_number],
-            confidence=interlinear.get('confidence', 0.7),
+            confidence=interlinear.get('confidence', 0.8),
             difficulty='medium',
             constraints='',
             linguistic_notes=interlinear.get('linguistic_notes', '')
@@ -277,6 +326,23 @@ def organize_by_category(rl_rules: List[RLTrainingRule]) -> Dict[str, RLRuleSet]
     return rule_sets
 
 
+def _infer_page_number(grammar_file: Path, data: dict) -> int:
+    page_number = data.get('page_number')
+    if isinstance(page_number, int):
+        return page_number
+
+    metadata_page = data.get('metadata', {}).get('page_number')
+    if isinstance(metadata_page, int):
+        return metadata_page
+
+    page_meta_page = data.get('page_metadata', {}).get('page_number')
+    if isinstance(page_meta_page, int):
+        return page_meta_page
+
+    match = re.search(r'(\d+)', grammar_file.stem)
+    return int(match.group(1)) if match else 0
+
+
 def main():
     import argparse
 
@@ -314,6 +380,8 @@ def main():
 
     # Load all extracted grammar pages
     grammar_files = sorted(input_dir.glob("grammar_page_*.json"))
+    if not grammar_files:
+        grammar_files = sorted(input_dir.glob("page_*.json"))
 
     if not grammar_files:
         print(f"\nNo grammar files found in {input_dir}")
@@ -338,14 +406,15 @@ def main():
         with open(grammar_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        page_num = data.get('page_number', 0)
+        page_num = _infer_page_number(grammar_file, data)
         stats['total_pages'] += 1
 
         # Convert grammar rules
         for rule in data.get('grammar_rules', []):
             stats['total_rules'] += 1
 
-            if rule.get('confidence', 0) < args.min_confidence:
+            rule_confidence = rule.get('confidence', data.get('extraction_confidence', 0.8))
+            if rule_confidence < args.min_confidence:
                 stats['rules_filtered'] += 1
                 continue
 
@@ -354,10 +423,12 @@ def main():
             stats['total_examples'] += len(rl_rule.positive_examples)
 
         # Convert interlinear texts
-        for interlinear in data.get('interlinear_texts', []):
+        interlinear_items = data.get('interlinear_texts', []) or data.get('interlinear_examples', [])
+        default_interlinear_confidence = data.get('extraction_confidence', 0.8)
+        for interlinear in interlinear_items:
             stats['total_interlinear'] += 1
 
-            if interlinear.get('confidence', 0) < args.min_confidence:
+            if interlinear.get('confidence', default_interlinear_confidence) < args.min_confidence:
                 continue
 
             interlinear_rules = extract_interlinear_examples(interlinear, page_num)
@@ -414,7 +485,7 @@ def main():
     # Generate summary report
     summary_file = output_dir / "rl_rules_summary.txt"
     with open(summary_file, 'w', encoding='utf-8') as f:
-        f.write("Dakota Grammar RL Training Rules Summary\n")
+        f.write("Grammar RL Training Rules Summary\n")
         f.write("="*70 + "\n\n")
 
         f.write(f"Source pages: {stats['total_pages']}\n")
@@ -444,7 +515,7 @@ def main():
         f.write("2. Generate negative examples for each rule\n")
         f.write("3. Implement verification functions\n")
         f.write("4. Create RL environment with these rules\n")
-        f.write("5. Train agent on Dakota grammar\n")
+        f.write("5. Train agent on the extracted grammar rules\n")
 
     print(f"  Saved {summary_file.name}")
 
