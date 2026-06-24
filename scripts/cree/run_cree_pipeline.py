@@ -17,6 +17,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from dakota_extraction.core.cree_extraction_prompt import build_cree_extraction_prompt
 from dakota_extraction.core.cree_grammar_extraction_prompt import build_cree_grammar_extraction_prompt
+from dakota_extraction.core.cree_reverse_extraction_prompt import build_cree_reverse_extraction_prompt
 from dakota_extraction.core.page_processor import PageProcessor
 from dakota_extraction.datasets.cree_training_dataset_builder import CreeTrainingDatasetBuilder
 from dakota_extraction.profiles.cree1865 import CREE1865_PROFILE
@@ -111,9 +112,13 @@ def main() -> int:
     parser.add_argument("--grammar-pages", nargs="*", type=int, help="Explicit grammar/front-matter PDF pages to render")
     parser.add_argument("--grammar-start-page", type=int, help="Grammar/front-matter range start page")
     parser.add_argument("--grammar-end-page", type=int, help="Grammar/front-matter range end page inclusive")
+    parser.add_argument("--reverse-pages", nargs="*", type=int, help="Explicit reverse dictionary PDF pages to render/extract")
+    parser.add_argument("--reverse-start-page", type=int, help="Reverse dictionary range start page")
+    parser.add_argument("--reverse-end-page", type=int, help="Reverse dictionary range end page inclusive")
     parser.add_argument("--max-tokens", type=int, default=12000, help="Claude max output tokens per page")
     parser.add_argument("--skip-dictionary-extraction", action="store_true", help="Only render pages; do not call Anthropic")
     parser.add_argument("--skip-grammar-extraction", action="store_true", help="Render grammar pages only; do not call Anthropic")
+    parser.add_argument("--skip-reverse-extraction", action="store_true", help="Render reverse pages only; do not call Anthropic")
     parser.add_argument("--skip-dataset-build", action="store_true", help="Do not build SFT/RL datasets from extracted JSON")
     args = parser.parse_args()
 
@@ -133,14 +138,22 @@ def main() -> int:
         args.grammar_end_page,
         CREE1865_PROFILE.sample_front_matter_pages,
     )
+    reverse_pages = _resolve_pages(
+        args.reverse_pages,
+        args.reverse_start_page,
+        args.reverse_end_page,
+        CREE1865_PROFILE.sample_reverse_dictionary_pages,
+    )
 
     output_root = Path(args.output_root)
     rendered_dictionary_dir = output_root / "rendered" / "dictionary_pages"
+    rendered_reverse_dir = output_root / "rendered" / "reverse_dictionary_pages"
     rendered_grammar_dir = output_root / "rendered" / "grammar_pages"
     extracted_dictionary_dir = output_root / "extracted_dictionary"
     extracted_grammar_dir = output_root / "extracted_grammar"
     reasoning_dir = output_root / "reasoning_traces"
     dictionary_reasoning_dir = reasoning_dir / "dictionary"
+    reverse_reasoning_dir = reasoning_dir / "reverse_dictionary"
     grammar_reasoning_dir = reasoning_dir / "grammar"
     dataset_dir = output_root / "training_datasets"
     report_path = output_root / "cree_pipeline_report.json"
@@ -152,12 +165,15 @@ def main() -> int:
     print(f"PDF: {pdf_path}")
     print(f"Page count: {page_count}")
     print(f"Dictionary pages: {dictionary_pages}")
+    print(f"Reverse dictionary pages: {reverse_pages}")
     print(f"Grammar pages: {grammar_pages}")
 
     rendered_dictionary = _render_selected_pages(pdf_path, rendered_dictionary_dir, dictionary_pages, args.render_dpi)
+    rendered_reverse = _render_selected_pages(pdf_path, rendered_reverse_dir, reverse_pages, args.render_dpi)
     rendered_grammar = _render_selected_pages(pdf_path, rendered_grammar_dir, grammar_pages, args.render_dpi)
 
     extracted_dictionary_pages: list[str] = []
+    extracted_reverse_pages: list[str] = []
     extracted_grammar_pages: list[str] = []
     extraction_mode = "render_only"
     if not os.getenv("ANTHROPIC_API_KEY"):
@@ -175,6 +191,22 @@ def main() -> int:
                     page_context=(
                         "This is a Part I English-to-Cree dictionary page. "
                         "Treat English headwords as the source side and Cree forms as the target side."
+                    )
+                ),
+                max_tokens=args.max_tokens,
+            )
+        if args.skip_reverse_extraction:
+            print("Skipping reverse dictionary extraction by request.")
+        else:
+            extracted_reverse_pages = _extract_selected_pages(
+                rendered_pages=rendered_reverse,
+                output_dir=extracted_dictionary_dir,
+                reasoning_dir=reverse_reasoning_dir,
+                prompt_builder=lambda: build_cree_reverse_extraction_prompt(
+                    page_context=(
+                        "This is a Part II Cree-to-English dictionary page. "
+                        "Treat Cree headwords as the source anchor, but normalize fields so "
+                        "cree_primary remains Cree and english_headword remains the English gloss."
                     )
                 ),
                 max_tokens=args.max_tokens,
@@ -216,16 +248,20 @@ def main() -> int:
         "resolved_pdf_path": str(pdf_path.resolve()),
         "page_count": page_count,
         "dictionary_pages": dictionary_pages,
+        "reverse_dictionary_pages": reverse_pages,
         "grammar_pages": grammar_pages,
         "rendered_dictionary": summarize_rendered_pages(rendered_dictionary.values()),
+        "rendered_reverse_dictionary": summarize_rendered_pages(rendered_reverse.values()),
         "rendered_grammar": summarize_rendered_pages(rendered_grammar.values()),
         "extraction_mode": extraction_mode,
         "extracted_dictionary_pages": reported_dictionary_pages,
+        "extracted_reverse_dictionary_pages": extracted_reverse_pages,
         "extracted_grammar_pages": reported_grammar_pages,
         "dataset_stats": dataset_stats,
         "notes": [
             "This report reflects the local single-source PDF only: CreeDictionary.pdf.",
-            "Dictionary extraction currently targets Part I English-to-Cree pages with a dedicated Cree schema.",
+            "Dictionary extraction supports both Part I English-to-Cree pages and Part II Cree-to-English pages.",
+            "Reverse pages are normalized into the same english_headword/cree_primary fields used by the dataset builder.",
             "Grammar extraction now runs live on selected front-matter pages and saves raw rule JSON for later RL-gym conversion.",
             "scripts/cree/validate_cree_bootstrap.py remains an offline synthetic validation helper; it is not live extraction.",
         ],

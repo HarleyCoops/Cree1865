@@ -60,6 +60,6 @@ CREE1865_PROFILE = HistoricalSourceProfile(
         "Part I English-Cree begins at PDF page 29.",
         "The reverse-section transition appears at printed page 183, which lands at PDF page 211 in the local scan.",
         "The first full Cree-English entry page appears at printed page 184, which lands at PDF page 212 in the local scan.",
-        "Current automated extraction is only schema-ready for Part I English-Cree pages.",
+        "Automated dictionary extraction now has prompt support for Part I English-Cree and Part II Cree-English pages.",
     ),
 )

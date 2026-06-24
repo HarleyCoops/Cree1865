@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
+
+
+CREE_ORTHOGRAPHY_CHARS = set(
+    "\u0101\u0113\u012b\u014d\u016b"
+    "\u00e1\u00e9\u00ed\u00f3\u00fa"
+    "\u00e2\u00ea\u00ee\u00f4\u00fb"
+)
 
 
 @dataclass
@@ -67,6 +75,35 @@ def build_sft_example(entry: NormalizedCreeEntry) -> dict[str, object]:
     }
 
 
+def _special_chars(text: str) -> list[str]:
+    return sorted(set(text) & CREE_ORTHOGRAPHY_CHARS)
+
+
+def _base_info(entry: NormalizedCreeEntry, task_type: str, answer: str) -> dict[str, object]:
+    difficulty = estimate_difficulty(entry)
+    return {
+        "rule_id": entry.entry_id,
+        "task_type": task_type,
+        "difficulty": difficulty,
+        "verification_pattern": re.escape(answer),
+        "special_chars": _special_chars(answer),
+        "required_affixes": [],
+        "hints": [answer],
+        "orthography_chars": sorted(CREE_ORTHOGRAPHY_CHARS),
+    }
+
+
+def _task_metadata(entry: NormalizedCreeEntry, direction: str) -> dict[str, object]:
+    return {
+        "direction": direction,
+        "entry_id": entry.entry_id,
+        "difficulty": estimate_difficulty(entry),
+        "page": entry.page_number,
+        "source_image": entry.source_image,
+        "confidence": entry.confidence,
+    }
+
+
 def build_forward_task(entry: NormalizedCreeEntry) -> dict[str, object]:
     """English-to-Cree lookup task."""
     prompt_lines = [
@@ -80,16 +117,18 @@ def build_forward_task(entry: NormalizedCreeEntry) -> dict[str, object]:
     if entry.usage_notes:
         prompt_lines.append(f"Usage notes: {entry.usage_notes}")
 
+    prompt = "\n".join(prompt_lines) + "\n"
+    difficulty = estimate_difficulty(entry)
     return {
-        "prompt": "\n".join(prompt_lines) + "\n",
+        "id": f"{entry.entry_id}_english_to_cree",
+        "task_id": f"{entry.entry_id}_english_to_cree",
+        "prompt": prompt,
+        "question": prompt,
         "answer": entry.cree_primary,
-        "metadata": {
-            "direction": "english_to_cree",
-            "entry_id": entry.entry_id,
-            "difficulty": estimate_difficulty(entry),
-            "page": entry.page_number,
-            "source_image": entry.source_image,
-        },
+        "task_type": "word_translation",
+        "difficulty": difficulty,
+        "info": _base_info(entry, "word_translation", entry.cree_primary),
+        "metadata": _task_metadata(entry, "english_to_cree"),
     }
 
 
@@ -104,19 +143,44 @@ def build_backward_task(entry: NormalizedCreeEntry) -> dict[str, object]:
     if entry.variants:
         prompt_lines.append("Related variants: " + ", ".join(entry.variants))
 
+    prompt = "\n".join(prompt_lines) + "\n"
+    difficulty = estimate_difficulty(entry)
+    info = _base_info(entry, "reverse_translation", entry.english_headword)
+    info["special_chars"] = []
     return {
-        "prompt": "\n".join(prompt_lines) + "\n",
+        "id": f"{entry.entry_id}_cree_to_english",
+        "task_id": f"{entry.entry_id}_cree_to_english",
+        "prompt": prompt,
+        "question": prompt,
         "answer": entry.english_headword,
-        "metadata": {
-            "direction": "cree_to_english",
-            "entry_id": entry.entry_id,
-            "difficulty": estimate_difficulty(entry),
-            "page": entry.page_number,
-            "source_image": entry.source_image,
-        },
+        "task_type": "reverse_translation",
+        "difficulty": difficulty,
+        "info": info,
+        "metadata": _task_metadata(entry, "cree_to_english"),
     }
 
 
 def build_rl_tasks(entry: NormalizedCreeEntry) -> list[dict[str, object]]:
     """Return the core forward and backward RL tasks."""
     return [build_forward_task(entry), build_backward_task(entry)]
+
+
+def build_qa_pairs(entry: NormalizedCreeEntry) -> list[dict[str, object]]:
+    """Return plain Q&A records for non-RL dataset consumers."""
+    difficulty = estimate_difficulty(entry)
+    return [
+        {
+            "id": f"{entry.entry_id}_qa_english_to_cree",
+            "question": f"What is the Cree for '{entry.english_headword}'?",
+            "answer": entry.cree_primary,
+            "direction": "english_to_cree",
+            "metadata": _task_metadata(entry, "english_to_cree") | {"difficulty": difficulty},
+        },
+        {
+            "id": f"{entry.entry_id}_qa_cree_to_english",
+            "question": f"What is the English meaning of '{entry.cree_primary}'?",
+            "answer": entry.english_headword,
+            "direction": "cree_to_english",
+            "metadata": _task_metadata(entry, "cree_to_english") | {"difficulty": difficulty},
+        },
+    ]

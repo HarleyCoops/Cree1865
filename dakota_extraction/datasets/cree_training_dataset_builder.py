@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from dakota_extraction.datasets.cree_task_generator import (
     NormalizedCreeEntry,
+    build_qa_pairs,
     build_rl_tasks,
     build_sft_example,
 )
@@ -41,6 +42,16 @@ def _flatten_examples(value: Any) -> List[str]:
         elif item:
             examples.append(str(item).strip())
     return examples
+
+
+def _entry_id_or_fallback(value: Any, page_number: Any, index: int) -> str:
+    candidate = str(value or "").strip()
+    fallback = f"page_{page_number or 0:03d}_entry_{index + 1:03d}"
+    if not candidate or candidate.lower() in {"auto-generated later", "auto generated later"}:
+        return fallback
+    if not candidate.lower().startswith("page_"):
+        return fallback
+    return candidate
 
 
 @dataclass
@@ -106,6 +117,7 @@ class CreeTrainingDatasetBuilder:
         self._validate_entries(valid_entries, stats)
         self._write_sft_datasets(valid_entries)
         self._write_rl_tasks(valid_entries)
+        self._write_qa_pairs(valid_entries)
         stats.sample_for_review = self._write_spot_check(valid_entries)
         self._write_rejected_entries(rejected_entries)
         self._write_report(stats)
@@ -126,7 +138,7 @@ class CreeTrainingDatasetBuilder:
             page_number = page_meta.get("page_number")
             source_image = page_meta.get("image_path")
             for index, item in enumerate(payload.get("entries", [])):
-                entry_id = item.get("entry_id") or f"page_{page_number or 0:03d}_entry_{index+1:03d}"
+                entry_id = _entry_id_or_fallback(item.get("entry_id"), page_number, index)
                 entries.append(
                     NormalizedCreeEntry(
                         entry_id=entry_id,
@@ -226,6 +238,12 @@ class CreeTrainingDatasetBuilder:
         self._write_jsonl(
             self.output_dir / "rl_tasks_all.jsonl",
             (task for entry in entries for task in build_rl_tasks(entry)),
+        )
+
+    def _write_qa_pairs(self, entries: List[NormalizedCreeEntry]) -> None:
+        self._write_jsonl(
+            self.output_dir / "qa_pairs_all.jsonl",
+            (record for entry in entries for record in build_qa_pairs(entry)),
         )
 
     def _write_spot_check(self, entries: List[NormalizedCreeEntry]) -> List[Dict[str, Any]]:

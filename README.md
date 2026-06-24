@@ -37,10 +37,11 @@ The archival story now has two anchors:
 - the 1865 original on Internet Archive as `cihm_41985`
 - the 1938 revised companion on Internet Archive as `dictionaryofcree0000reve`
 
-Current limitation:
+Current pipeline state:
 
-- the automated structured extraction path is only schema-ready for `Part I. English-Cree`
-- `Part II. Cree-English` is now boundary-mapped and rendered for inspection, but still needs a Cree-headword extraction schema before live parsing
+- the automated structured extraction path now supports both `Part I. English-Cree` and `Part II. Cree-English`
+- reverse-section pages are normalized into the same downstream fields: `cree_primary` remains Cree and `english_headword` remains the English gloss
+- the full local 1865 dictionary run produced 463 page JSON files, 19,560 deduplicated usable entries, and balanced English->Cree / Cree->English task exports
 
 See [SOURCE_NOTES.md](C:/Users/chris/Cree1865/SOURCE_NOTES.md).
 See also the visual/source package in [docs/source_dossier/CREE1865_SOURCE_DOSSIER.md](C:/Users/chris/Cree1865/docs/source_dossier/CREE1865_SOURCE_DOSSIER.md).
@@ -75,13 +76,29 @@ This repo carries the Dakota core as a starting template:
 
 The names are still Dakota-flavored in many modules. That is intentional for the bootstrap phase. We are preserving the known-good control surface first, then generalizing names and schemas only where the Cree document forces the change.
 
+## Full-Corpus Dataset Snapshot
+
+Latest local full-dictionary build:
+
+- extraction root: `data/cree_goal_run_20260624_full_dictionary`
+- extracted dictionary JSON pages: `463`
+- raw entries: `19,607`
+- deduplicated usable entries: `19,560`
+- rejected incomplete entries: `125`
+- multi-variant entries: `4,049`
+- RL task records: `38,870`
+- plain Q&A records: `38,870`
+- SFT split: `18,463` train / `972` validation
+- RL directions: `19,435` English->Cree and `19,435` Cree->English
+
+The generated `data/` artifacts are intentionally ignored by git; the code and docs describe how to regenerate them from the local extraction JSON.
+
 ## Immediate Next Steps
 
-1. inspect `CreeDictionary.pdf` and confirm the exact page boundaries for grammar vs dictionary extraction
-2. adapt the extraction pipeline to the real two-part structure of the 1865 book
-3. adapt the extraction prompt and JSON schema to the Cree dictionary structure
-4. rerun the Dakota-style extraction pipeline on a small Cree page slice from both parts
-5. preserve the full publication path: git -> W&B -> Tinker/remote RL -> Hugging Face
+1. run the 1200-step small-model Tinker pass on the audited full-dictionary RL tasks
+2. inspect reward ledgers for orthography and exact-answer behavior before scaling batch size or model size
+3. publish the selected checkpoint/model card once a non-smoke run is complete
+4. keep the community-review framing explicit: this is a transparent bootstrap artifact, not a language authority
 
 ## Bootstrap Validation
 
@@ -99,13 +116,13 @@ That command validates:
 4. SFT dataset materialization
 5. RL task generation
 
-The live extraction runner now also exists for the next API-backed pass:
+The live extraction runner supports forward, reverse, and grammar page slices:
 
 ```bash
-python scripts/cree/run_cree_pipeline.py --dictionary-pages 29 40 100
+python scripts/cree/run_cree_pipeline.py --dictionary-pages 29 40 100 --reverse-pages 212 220
 ```
 
-That command reuses the Dakota control surface shape while swapping in Cree-specific page rendering, prompt/schema expectations, and dataset materialization for `Part I. English-Cree`.
+That command reuses the Dakota control surface shape while swapping in Cree-specific page rendering, prompt/schema expectations, and dataset materialization for both dictionary directions.
 
 ## Operator Docs
 

@@ -32,7 +32,20 @@ This Cree source may preserve those assumptions only partially. Before large-sca
 - whether dictionary entries are consistent across both internal parts
 - whether the Cree orthography and entry layout require prompt or schema upgrades
 - whether examples and cross-references are stable enough to generate reverse Cree -> English tasks without manual repair
-- how the Cree-headword schema for `Part II` should differ from the current English-headword extraction schema
+- how to keep long reverse-section English glosses useful for training without overweighting verbose definitions
+
+## Full Extraction Status
+
+The local 2026-06-24 full-dictionary extraction covers:
+
+- PDF pages `29-210`: Part I English-Cree
+- PDF pages `212-492`: Part II Cree-English
+- total extracted page JSON files: `463`
+- deduplicated usable entries: `19,560`
+- RL tasks: `38,870`
+- plain Q&A records: `38,870`
+
+The reverse section is normalized to the same downstream schema as Part I: `cree_primary` always contains the Cree form, and `english_headword` always contains the English gloss or headword.
 
 ## Working Rule
 

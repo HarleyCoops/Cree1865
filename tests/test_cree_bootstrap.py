@@ -5,7 +5,9 @@ from pathlib import Path
 
 import fitz
 
+from dakota_extraction.core.cree_reverse_extraction_prompt import build_cree_reverse_extraction_prompt
 from dakota_extraction.datasets.cree_training_dataset_builder import CreeTrainingDatasetBuilder
+from dakota_extraction.datasets.cree_task_generator import NormalizedCreeEntry, build_rl_tasks
 from dakota_extraction.profiles.cree1865 import CREE1865_PROFILE
 from dakota_extraction.tools.pdf_ingest import render_pdf_pages
 
@@ -92,6 +94,7 @@ def test_cree_dataset_builder_end_to_end(tmp_path: Path) -> None:
     assert (dataset_dir / "sft_train.jsonl").exists()
     assert (dataset_dir / "sft_valid.jsonl").exists()
     assert (dataset_dir / "rl_tasks_all.jsonl").exists()
+    assert (dataset_dir / "qa_pairs_all.jsonl").exists()
 
     rl_records = [
         json.loads(line)
@@ -99,6 +102,15 @@ def test_cree_dataset_builder_end_to_end(tmp_path: Path) -> None:
     ]
     directions = {record["metadata"]["direction"] for record in rl_records}
     assert directions == {"english_to_cree", "cree_to_english"}
+    assert all(record["question"] == record["prompt"] for record in rl_records)
+    assert {record["task_type"] for record in rl_records} == {"word_translation", "reverse_translation"}
+    assert all("info" in record for record in rl_records)
+
+    qa_records = [
+        json.loads(line)
+        for line in (dataset_dir / "qa_pairs_all.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert {record["direction"] for record in qa_records} == {"english_to_cree", "cree_to_english"}
 
 
 def test_cree_dataset_builder_allows_retained_loanword_entries(tmp_path: Path) -> None:
@@ -139,3 +151,136 @@ def test_cree_dataset_builder_allows_retained_loanword_entries(tmp_path: Path) -
     assert stats.deduplicated_entries == 1
     assert stats.identical_language_pairs == 1
     assert (dataset_dir / "rl_tasks_all.jsonl").exists()
+
+
+def test_cree_dataset_builder_replaces_placeholder_entry_ids(tmp_path: Path) -> None:
+    extraction_dir = tmp_path / "extracted"
+    dataset_dir = tmp_path / "datasets"
+    extraction_dir.mkdir()
+
+    _write_extraction(
+        extraction_dir / "page_212.json",
+        212,
+        [
+            {
+                "entry_id": "auto-generated later",
+                "english_headword": "Fish",
+                "cree_primary": "Kinosayw",
+                "part_of_speech": "n.",
+                "example_pairs": [],
+                "confidence": 0.9,
+            },
+            {
+                "entry_id": "auto-generated later",
+                "english_headword": "Fire",
+                "cree_primary": "Iskootayw",
+                "part_of_speech": "n.",
+                "example_pairs": [],
+                "confidence": 0.9,
+            },
+        ],
+    )
+
+    builder = CreeTrainingDatasetBuilder(
+        extraction_dir=str(extraction_dir),
+        output_dir=str(dataset_dir),
+        validation_split=0.5,
+    )
+    builder.build_all_datasets()
+
+    rl_records = [
+        json.loads(line)
+        for line in (dataset_dir / "rl_tasks_all.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    ids = [record["id"] for record in rl_records]
+
+    assert len(ids) == len(set(ids))
+    assert ids == [
+        "page_212_entry_001_english_to_cree",
+        "page_212_entry_001_cree_to_english",
+        "page_212_entry_002_english_to_cree",
+        "page_212_entry_002_cree_to_english",
+    ]
+
+
+def test_cree_dataset_builder_scopes_local_numeric_entry_ids_by_page(tmp_path: Path) -> None:
+    extraction_dir = tmp_path / "extracted"
+    dataset_dir = tmp_path / "datasets"
+    extraction_dir.mkdir()
+
+    for page_number, headword, cree in [(29, "Abandon", "Wapi-nao"), (30, "Arrow", "Atush")]:
+        _write_extraction(
+            extraction_dir / f"page_{page_number:03d}.json",
+            page_number,
+            [
+                {
+                    "entry_id": "1",
+                    "english_headword": headword,
+                    "cree_primary": cree,
+                    "part_of_speech": "n.",
+                    "example_pairs": [],
+                    "confidence": 0.9,
+                },
+            ],
+        )
+
+    builder = CreeTrainingDatasetBuilder(
+        extraction_dir=str(extraction_dir),
+        output_dir=str(dataset_dir),
+        validation_split=0.5,
+    )
+    builder.build_all_datasets()
+
+    rl_records = [
+        json.loads(line)
+        for line in (dataset_dir / "rl_tasks_all.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    ids = [record["id"] for record in rl_records]
+
+    assert len(ids) == len(set(ids))
+    assert ids == [
+        "page_029_entry_001_english_to_cree",
+        "page_029_entry_001_cree_to_english",
+        "page_030_entry_001_english_to_cree",
+        "page_030_entry_001_cree_to_english",
+    ]
+
+
+def test_cree_reverse_prompt_preserves_normalized_schema_direction() -> None:
+    prompt = build_cree_reverse_extraction_prompt(page_context="First full Part II page.")
+
+    assert '"dictionary_direction": "cree_to_english"' in prompt
+    assert "Cree headword" in prompt
+    assert '"cree_primary": "Cree entry headword exactly as printed"' in prompt
+    assert '"english_headword": "English gloss or gloss phrase exactly as printed"' in prompt
+
+
+def test_cree_rl_tasks_are_tinker_compatible() -> None:
+    entry = NormalizedCreeEntry(
+        entry_id="page_029_entry_001",
+        english_headword="A good man",
+        cree_primary="a meyosit napao",
+        part_of_speech="phrase",
+        qualifiers=[],
+        variants=["payuk napao"],
+        examples=["a good man => a meyosit napao"],
+        usage_notes=None,
+        page_number=29,
+        source_image="page_029.png",
+        confidence=0.95,
+    )
+
+    forward, backward = build_rl_tasks(entry)
+
+    assert forward["question"] == forward["prompt"]
+    assert forward["task_type"] == "word_translation"
+    assert forward["difficulty"] in {"easy", "medium", "hard"}
+    assert forward["info"]["task_type"] == "word_translation"
+    assert forward["info"]["special_chars"] == sorted(set("a meyosit napao") & set(forward["info"]["orthography_chars"]))
+    assert forward["metadata"]["direction"] == "english_to_cree"
+
+    assert backward["question"] == backward["prompt"]
+    assert backward["task_type"] == "reverse_translation"
+    assert backward["info"]["task_type"] == "reverse_translation"
+    assert backward["info"]["special_chars"] == []
+    assert backward["metadata"]["direction"] == "cree_to_english"

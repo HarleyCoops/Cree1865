@@ -1,134 +1,103 @@
 ---
 language:
-- dak
+- crk
 - en
 license: apache-2.0
+library_name: peft
+pipeline_tag: text-generation
+base_model: Qwen/Qwen3.5-4B
 tags:
-- reinforcement-learning
-- rl
-- grpo
-- dakota
+- cree
 - indigenous-languages
-- thinking-machines
+- low-resource-language
+- dictionary
+- reinforcement-learning
+- grpo
 - tinker
-base_model: Qwen/Qwen3-30B-A3B-Instruct-2507
-widget:
-  - text: "Translate 'my elder brother' to Dakota."
-preview_image: grammar.jpg
+- thinking-machines
+datasets:
+- local:cree_goal_run_20260624_full_dictionary
 ---
 
-# Qwen3-30B-ThinkingMachines-Dakota1890
+# Cree1865 Tinker RL Adapter
 
-<div align="center">
-  <img src="https://huggingface.co/HarleyCooper/Qwen3-30B-ThinkingMachines-Dakota1890/resolve/main/visualizations/comprehensive_dashboard.png" width="100%" alt="Dakota RL Dashboard" />
-</div>
+This model card tracks the Cree1865 reinforcement-learning run built from Rev. E. A. Watkins' 1865 _A Dictionary of the Cree Language_. The repository is a Dakota1890-derived pipeline replayed on a new historical source.
 
-This model is a **Reinforcement Learning (RL) fine-tune** of Qwen/Qwen3-30B-A3B-Instruct-2507, optimized for **Dakota language grammar and morphology**.
+This is a research artifact and a bootstrap pass. It is not a Cree language authority, a production translator, or a substitute for community review.
 
-It was trained using the **Thinking Machines Tinker** distributed RL pipeline, leveraging the **GRPO (Group Relative Policy Optimization)** algorithm. The training process used a custom verifier environment built from Stephen Return Riggs' 1890 _Dakota Grammar & Dictionary_.
+## Source
 
-## Model Details
+- Source: Watkins, E. A. (1865), _A Dictionary of the Cree Language_
+- Local PDF: `CreeDictionary.pdf`
+- Archive master: `sources/CreeDictionary_1865_cihm_41985_complete.pdf`
+- Structure: one book with `Part I. English-Cree` and `Part II. Cree-English`
 
-* **Base Model**: Qwen/Qwen3-30B-A3B-Instruct-2507
-* **Architecture**: LoRA Adapter (Rank 32)
-* **Training Method**: GRPO (Group Relative Policy Optimization)
-* **Training Infrastructure**: Thinking Machines Tinker
-* **Language**: Dakota (dak), English (en)
-* **License**: Apache 2.0
+## Dataset Snapshot
 
-## Training Data & Methodology
+Latest local full-dictionary build:
 
-The model was trained on a dataset of **10,576 RL tasks** generated from 1,497 extracted Dakota grammar rules. These tasks focus on:
+| Field | Value |
+|---|---:|
+| Extracted page JSON files | 463 |
+| Raw entries | 19,607 |
+| Deduplicated usable entries | 19,560 |
+| Rejected incomplete entries | 125 |
+| Multi-variant entries | 4,049 |
+| SFT train / valid | 18,463 / 972 |
+| RL task records | 38,870 |
+| Plain Q&A records | 38,870 |
+| English->Cree RL tasks | 19,435 |
+| Cree->English RL tasks | 19,435 |
+| Duplicate RL task IDs after normalization | 0 |
 
-1. **Morphology**: Applying prefixes/suffixes (e.g., possessives `-ku`, `-ću`, `-tku`).
-2. **Translation**: Context-aware translation between Dakota and English.
-3. **Character Preservation**: Strict adherence to Dakota orthography (ŋ, š, ć, ź, ž, ʼ).
+The generated data lives under `data/cree_goal_run_20260624_full_dictionary/` locally and is ignored by git. The extraction and dataset-building code is tracked so the artifacts can be regenerated.
 
-### Reward Function
+## Current Training Status
 
-The RL training used a composite reward function (`DakotaGrammarRubric`) with the following components:
+Completed smoke run:
 
-* **Character Preservation (20%)**: Verifies correct usage of special Unicode characters.
-* **Affix Accuracy (10%)**: Checks for correct morphological transformations.
-* **Exact Match (40%)**: Rewards precise answers for rigid grammatical tasks.
-* **Pattern Matching (15%)**: Uses regex to verify structural correctness.
-* **Length Penalty (15%)**: Prevents verbosity.
+- Base model: `Qwen/Qwen3.5-4B`
+- Dataset: `data/cree_goal_run_20260624_full_dictionary/training_datasets/rl_tasks_all.jsonl`
+- Renderer: `qwen3_5_disable_thinking`
+- Steps: 4
+- Final reward: `0.1894479405034325`
+- Final parse success: `1.0`
+- Tinker weights: `tinker://096ba4d7-bccc-5d33-9209-e1a1a8d746dc:train:0/weights/final`
+- Ledger: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_smoke_20260624_qwen35_4b_no_think.csv`
 
-### Training Dynamics
+Next run:
 
-<div align="center">
-  <img src="https://huggingface.co/HarleyCooper/Qwen3-30B-ThinkingMachines-Dakota1890/resolve/main/visualizations/reward_progression.png" width="100%" alt="Reward Progression" />
-</div>
+- 1200 training steps
+- batch size 2
+- group size 2
+- max sampled tokens 64
+- W&B enabled through `WANDB_API_KEY`
 
-The model showed significant improvement in both morphological accuracy and character preservation over the course of training.
+At the current small-model settings, 1200 steps is long but reasonable: the previous smoke timing suggests roughly 3-4 hours plus service overhead. It should not be treated as a final scale run.
 
-## Performance
+## Reward Surface
 
-(Metrics from the final training run)
+The current environment reuses the Dakota1890 deterministic reward ledger. The Cree task export now provides Tinker-compatible fields:
 
-* **Morphological Accuracy**: 100.0%
-* **Character Preservation**: 61.9% (on strict exact match of all special chars)
-* **Overall Composite Reward**: 0.317
-* **Token Efficiency**: Reduced from ~210 tokens/turn to 13.28 tokens/turn
+- `question`
+- `prompt`
+- `answer`
+- `task_type`
+- `difficulty`
+- `info.special_chars`
+- `info.verification_pattern`
+- `metadata.direction`
 
-<div align="center">
-  <img src="https://huggingface.co/HarleyCooper/Qwen3-30B-ThinkingMachines-Dakota1890/resolve/main/visualizations/training_metrics.png" width="100%" alt="Training Metrics" />
-</div>
+Reward channels include exact match, character overlap, pattern match, affix/default channel, and parse success. This is appropriate for a small audited run, but larger runs should first review long reverse-section English glosses and community-facing Q&A wording.
 
-## Usage
+## Limitations
 
-### With Hugging Face Transformers
-
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
-
-base_model_name = "Qwen/Qwen3-30B-A3B-Instruct-2507"
-adapter_name = "HarleyCooper/Qwen3-30B-ThinkingMachines-Dakota1890"
-
-# Load base model
-model = AutoModelForCausalLM.from_pretrained(
-    base_model_name,
-    device_map="auto",
-    trust_remote_code=True
-)
-tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-
-# Load adapter
-model = PeftModel.from_pretrained(model, adapter_name)
-
-# Inference
-prompt = "Translate 'my elder brother' to Dakota using the correct possessive suffix."
-messages = [
-    {"role": "system", "content": "You are a Dakota language expert."},
-    {"role": "user", "content": prompt}
-]
-text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-inputs = tokenizer(text, return_tensors="pt").to(model.device)
-
-outputs = model.generate(**inputs, max_new_tokens=128)
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
-```
-
-### With Thinking Machines Tinker
-
-This checkpoint is also available directly via the Tinker platform:
-
-```python
-# Tinker path
-tinker_path = "tinker://da1ef918-d67a-5080-b500-dd1256db9ca7:train:0/weights/final"
-```
-
-## Files
-
-* `adapter_model.safetensors`: The LoRA adapter weights.
-* `adapter_config.json`: Adapter configuration.
-* `tinker_metadata.json`: Metadata from the Thinking Machines training run.
+- The source is a missionary-era 1865 dictionary with historical orthography and colonial-era framing.
+- The extraction may preserve source errors, scan artifacts, and model extraction mistakes.
+- Many tasks are direct dictionary lookups, not natural dialogue.
+- Long reverse-section glosses should be filtered or down-weighted before larger-scale training.
+- Cree language work should be reviewed with appropriate community and linguistic expertise.
 
 ## Citation
 
-If you use this model, please cite the original grammar source:
-
-> Riggs, S. R. (1890). _Dakota Grammar, Texts, and Ethnography_. Washington: Government Printing Office.
-
-And the Thinking Machines / PrimeIntellect RL framework.
+Watkins, E. A. (1865). _A Dictionary of the Cree Language, as Spoken by the Indians of the Hudson's Bay Territories._ London: Society for Promoting Christian Knowledge.
