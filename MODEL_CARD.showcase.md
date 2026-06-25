@@ -92,7 +92,7 @@ Tracked ledgers:
 - Raw: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think.csv`
 - Deduped: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think_deduped.csv`
 
-Reward channels include exact match, character overlap, pattern match, an affix/default channel, length penalty, difficulty multiplier, and parse success. The verifier is deterministic; there is no LLM judge in the reward path.
+The published Cree verifier is `harleycooper/cree1865-dictionary-qa` version `0.1.2`. Reward channels are exact match, target containment, Cree orthography preservation, character F1, and concise answer length. There is no Dakota grammar rubric and no affix/default reward channel in the Cree verifier. The verifier is deterministic; there is no LLM judge in the reward path.
 
 ## Usage
 

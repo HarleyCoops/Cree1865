@@ -89,7 +89,9 @@ At these small-model settings, 1200 steps is long but feasible; the practical ri
 
 ## Reward Surface
 
-The current environment reuses the Dakota1890 deterministic reward ledger. The Cree task export now provides Tinker-compatible fields:
+The current Prime/Verifiers environment is Cree-specific: `harleycooper/cree1865-dictionary-qa` version `0.1.2`. It uses the Watkins dictionary QA export when repo data is present and ships a tiny packaged smoke dataset so Prime registry CI can load the environment in isolation.
+
+The Cree task export provides Tinker-compatible fields:
 
 - `question`
 - `prompt`
@@ -100,7 +102,7 @@ The current environment reuses the Dakota1890 deterministic reward ledger. The C
 - `info.verification_pattern`
 - `metadata.direction`
 
-Reward channels include exact match, character overlap, pattern match, affix/default channel, and parse success. This is appropriate for a small audited run, but larger runs should first review long reverse-section English glosses and community-facing Q&A wording.
+Reward channels are exact match, target containment, Cree orthography preservation, character F1, and concise answer length. There is no Dakota grammar rubric and no affix/default reward channel in the Cree verifier. Larger runs should still review long reverse-section English glosses and community-facing Q&A wording before making model-quality claims.
 
 ## Limitations
 

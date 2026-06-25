@@ -173,20 +173,23 @@ The reward is **deterministic**. There is **no LLM judge**. Every component is i
 
 ```python
 reward = (
-    0.40 * orthography_recall   +   # macrons & accents:  ā ē ī ō ū  á é í ó ú  preserved?
-    0.40 * affix_accuracy       +   # Cree morphology: correct prefixes/suffixes applied?
-    0.20 * semantic_match           # meaning preserved vs. the 1865 gloss / ground truth?
-) * difficulty_multiplier           # curriculum weight, 1.0× → 2.0×
+    0.20 * exact_match          +   # normalized answer exactly equals the source answer
+    0.25 * target_containment   +   # source answer appears inside the model response
+    0.20 * orthography_recall   +   # required Cree macrons, accents, hyphens, apostrophes preserved
+    0.20 * character_f1         +   # robust overlap for spelling-close dictionary answers
+    0.15 * concise_length           # answer is present without long unsupported expansion
+)
 ```
 
 | Component | Weight | What it verifies |
 |---|:--:|---|
-| **Orthography recall** | 40% | Required Unicode macron/accent characters present, against the source |
-| **Affix accuracy** | 40% | Regex/pattern checks for Cree morphology (verb finals `-num`/`-tum`, derivations) |
-| **Semantic match** | 20% | Similarity to the ground-truth gloss or dictionary lookup |
-| **Difficulty multiplier** | ×1.0–2.0 | Curriculum weighting after the component sum |
+| **Exact match** | 20% | The normalized response exactly matches the Watkins-derived answer |
+| **Target containment** | 25% | The expected Cree or English answer appears in the response |
+| **Orthography recall** | 20% | Required Cree orthography marks and punctuation are preserved |
+| **Character F1** | 20% | Spelling-level overlap for near misses without an LLM judge |
+| **Concise length** | 15% | The answer is not empty or padded with unsupported text |
 
-Because each piece is checkable by code rather than judgment, GRPO gets **dense, multi-dimensional feedback on structure** — which is why an RL approach works on a task usually considered too qualitative for it.
+There is no Dakota affix/default channel in the Cree verifier. Because each piece is checkable by code rather than judgment, GRPO gets **dense, multi-dimensional feedback on dictionary lookup behavior**.
 
 ---
 
@@ -255,6 +258,7 @@ print(tok.decode(out[0], skip_special_tokens=True))
 [done]     Full-corpus datasets  38,870 RL tasks · 18,463/972 SFT split
 [done]     Tinker smoke run      Qwen/Qwen3.5-4B · parse success 1.0
 [done]     Longer GRPO run       1200 steps · final checkpoint saved · W&B kjn02ee4
+[done]     Prime env published   harleycooper/cree1865-dictionary-qa v0.1.2 · CI success
 [planned]  HF publication        adapters + hosted inference Space
 [planned]  Review loop           community/linguistic review before authority claims
 ```

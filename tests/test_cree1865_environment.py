@@ -10,6 +10,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "environments" / "cree1865_
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
+from cree1865_dictionary_qa import environment as cree_environment
 from cree1865_dictionary_qa.environment import CreeDictionaryRubric, build_dataset, load_environment
 
 
@@ -97,6 +98,20 @@ def test_cree_dataset_builder_preserves_fields_and_shuffles_before_cap(tmp_path:
     assert row["info"]["page"] >= 29
 
 
+def test_cree_dataset_builder_uses_packaged_smoke_data_when_repo_data_is_absent(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(cree_environment, "DEFAULT_DATASET", tmp_path / "missing.jsonl")
+
+    dataset = cree_environment.build_dataset(max_examples=1, shuffle=False)
+
+    assert len(dataset) == 1
+    row = dataset[0]
+    assert row["question"]
+    assert row["answer"]
+    assert row["info"]["task_type"] == "dictionary_lookup"
+
+
 def test_cree_load_environment_builds_train_and_eval_split(tmp_path: Path) -> None:
     dataset_path = tmp_path / "rl_tasks_all.jsonl"
     _write_cree_tasks(dataset_path, count=20)
@@ -107,6 +122,20 @@ def test_cree_load_environment_builds_train_and_eval_split(tmp_path: Path) -> No
     assert env.eval_dataset is not None
     assert len(env.eval_dataset) == 3
     assert "Cree" in env.system_prompt
+
+
+def test_cree_load_environment_accepts_prime_eval_kwargs(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "rl_tasks_all.jsonl"
+    _write_cree_tasks(dataset_path, count=8)
+
+    env = load_environment(
+        dataset_path=dataset_path,
+        max_examples=4,
+        eval_fraction=0,
+        max_turns=5,
+    )
+
+    assert len(env.dataset) == 4
 
 
 def test_tinker_cree_adapter_uses_cree_rubric_not_dakota() -> None:

@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 PACKAGE_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_ROOT.parents[2]
 DEFAULT_DATASET = REPO_ROOT / "data" / "cree_goal_run_20260624_full_dictionary" / "training_datasets" / "rl_tasks_all.jsonl"
+PACKAGED_SMOKE_DATASET = PACKAGE_ROOT / "data" / "prime_smoke_tasks.jsonl"
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a careful Cree language assistant working from Watkins' 1865 Cree dictionary. "
@@ -97,6 +98,28 @@ def _read_jsonl(path_or_url: str | Path) -> list[dict[str, Any]]:
         if (row.get("question") or row.get("prompt")) and row.get("answer"):
             rows.append(row)
     return rows
+
+
+def _is_url(source: str | Path) -> bool:
+    return isinstance(source, str) and source.startswith(("http://", "https://"))
+
+
+def _resolve_dataset_source(dataset_path: str | Path | None) -> str | Path:
+    if dataset_path is not None:
+        source = dataset_path
+        if not _is_url(source) and not Path(source).expanduser().exists():
+            raise FileNotFoundError(f"Cree dataset not found: {source}")
+        return source
+
+    if DEFAULT_DATASET.exists():
+        return DEFAULT_DATASET
+    if PACKAGED_SMOKE_DATASET.exists():
+        logger.warning(
+            "Cree repo dataset not found at %s; using packaged smoke dataset",
+            DEFAULT_DATASET,
+        )
+        return PACKAGED_SMOKE_DATASET
+    raise FileNotFoundError(f"Cree dataset not found: {DEFAULT_DATASET}")
 
 
 def _prepare_records(raw_rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -197,10 +220,7 @@ def build_dataset(
     seed: int = 42,
     shuffle: bool = True,
 ) -> Dataset:
-    source = dataset_path or DEFAULT_DATASET
-    if not (isinstance(source, str) and source.startswith(("http://", "https://"))) and not Path(source).exists():
-        raise FileNotFoundError(f"Cree dataset not found: {source}")
-
+    source = _resolve_dataset_source(dataset_path)
     records = _prepare_records(_read_jsonl(source))
     if not records:
         raise ValueError("No usable Cree dictionary QA records found")
@@ -230,7 +250,9 @@ def load_environment(
     sampling_args: dict[str, Any] | None = None,
     seed: int = 42,
     shuffle: bool = True,
+    **_: Any,
 ) -> vf.Environment:
+    # Prime's generic eval harness may pass multi-turn kwargs to installed environments.
     dataset = build_dataset(
         dataset_path=dataset_path,
         max_examples=max_examples,

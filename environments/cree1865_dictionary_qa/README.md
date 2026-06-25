@@ -6,6 +6,14 @@ This environment is Cree-specific. It does not import Dakota runtime classes or 
 
 The reward is deterministic and continuous: exact match, target containment, Cree orthography preservation, character F1, and concise answer length. There is no affix reward channel.
 
+## Prime Hub
+
+Published as `harleycooper/cree1865-dictionary-qa` version `0.1.2`.
+
+```bash
+prime env install harleycooper/cree1865-dictionary-qa
+```
+
 ## Local Smoke
 
 ```bash
