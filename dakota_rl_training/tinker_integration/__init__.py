@@ -1,4 +1,4 @@
-"""Thinking Machines / Tinker integration utilities for Dakota RL."""
+"""Thinking Machines / Tinker integration utilities for dictionary RL."""
 
 from .dataset import (
     DakotaGrammarDatasetBuilder,
@@ -7,6 +7,11 @@ from .dataset import (
     DakotaGrammarExample,
 )
 from .env import DakotaTinkerEnv
+from .cree import (
+    CREE_DEFAULT_SYSTEM_PROMPT,
+    CreeDictionaryRubric,
+    create_cree_rubric,
+)
 from .ledger import export_reward_ledger, LEDGER_FIELDS
 from .observability import (
     augment_dashboard_metrics,
@@ -23,6 +28,9 @@ from .publish import (
 
 __all__ = [
     "DakotaTinkerEnv",
+    "CREE_DEFAULT_SYSTEM_PROMPT",
+    "CreeDictionaryRubric",
+    "create_cree_rubric",
     "DakotaGrammarDatasetBuilder",
     "DakotaGrammarDataset",
     "DakotaGrammarEnvGroupBuilder",

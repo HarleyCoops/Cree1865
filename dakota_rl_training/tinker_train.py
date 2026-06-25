@@ -50,18 +50,24 @@ logger = logging.getLogger(__name__)
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Train Dakota grammar RL policy on Tinker.")
+    parser = argparse.ArgumentParser(description="Train dictionary or grammar RL policy on Tinker.")
     parser.add_argument("--model-name", default="Qwen/Qwen3-30B-A3B-Instruct-2507", help="Base model to fine-tune.")
     parser.add_argument("--log-path", default="dakota_rl_training/outputs/tinker_run", help="Directory for logs/checkpoints.")
     parser.add_argument("--dataset-path", default=None, help="Optional override JSONL dataset.")
     parser.add_argument("--eval-path", default=None, help="Optional eval split JSONL.")
     parser.add_argument("--renderer-name", default=None, help="Optional Tinker renderer override.")
+    parser.add_argument(
+        "--rubric-name",
+        choices=["dakota", "cree"],
+        default="dakota",
+        help="Reward rubric/environment family to use for scoring.",
+    )
     parser.add_argument("--batch-size", type=int, default=32, help="Number of env groups per batch.")
     parser.add_argument("--group-size", type=int, default=16, help="Rollouts per GRPO group.")
     parser.add_argument("--max-examples", type=int, default=-1, help="Limit number of training examples.")
     parser.add_argument("--eval-examples", type=int, default=-1, help="Limit number of eval examples.")
     parser.add_argument("--eval-fraction", type=float, default=0.1, help="Eval split when eval_path not provided.")
-    parser.add_argument("--system-prompt", default=None, help="Override default Dakota system prompt.")
+    parser.add_argument("--system-prompt", default=None, help="Override the default system prompt.")
     parser.add_argument("--difficulty-filter", nargs="*", default=None, help="Filter dataset difficulties (case-insensitive).")
     parser.add_argument("--task-filter", nargs="*", default=None, help="Filter dataset task types.")
     parser.add_argument("--seed", type=int, default=42, help="Dataset shuffling seed.")
@@ -100,6 +106,7 @@ def build_dataset_builder(args: argparse.Namespace) -> DakotaGrammarDatasetBuild
         dataset_path=args.dataset_path,
         eval_path=args.eval_path,
         renderer_name=args.renderer_name,
+        rubric_name=args.rubric_name,
         max_examples=args.max_examples,
         eval_examples=args.eval_examples,
         eval_fraction=args.eval_fraction,

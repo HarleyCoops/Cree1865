@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Sequence
+from typing import Any, Callable, Sequence
 
 import chz
 from datasets import Dataset
@@ -28,11 +28,13 @@ class DakotaGrammarEnvGroupBuilder(EnvGroupBuilder):
         renderer: renderers.Renderer,
         system_prompt: str,
         group_size: int,
+        rubric_factory: Callable[[], Any] | None = None,
     ):
         self.example = example
         self.renderer = renderer
         self.system_prompt = system_prompt
         self.group_size = group_size
+        self.rubric_factory = rubric_factory
 
     async def make_envs(self):
         return [
@@ -40,6 +42,7 @@ class DakotaGrammarEnvGroupBuilder(EnvGroupBuilder):
                 example=self.example,
                 renderer=self.renderer,
                 system_prompt=self.system_prompt,
+                rubric_factory=self.rubric_factory,
             )
             for _ in range(self.group_size)
         ]
@@ -64,6 +67,7 @@ class DakotaGrammarDataset(RLDataset):
         group_size: int,
         renderer: renderers.Renderer,
         system_prompt: str,
+        rubric_factory: Callable[[], Any] | None = None,
         shuffle: bool = True,
         seed: int = 0,
     ):
@@ -76,6 +80,7 @@ class DakotaGrammarDataset(RLDataset):
         self.group_size = group_size
         self.renderer = renderer
         self.system_prompt = system_prompt
+        self.rubric_factory = rubric_factory
 
     def __len__(self) -> int:
         return math.ceil(len(self.examples) / self.batch_size)
@@ -90,6 +95,7 @@ class DakotaGrammarDataset(RLDataset):
                 renderer=self.renderer,
                 system_prompt=self.system_prompt,
                 group_size=self.group_size,
+                rubric_factory=self.rubric_factory,
             )
             for example in batch
         ]
@@ -125,6 +131,25 @@ def _get_renderer(model_name: str, renderer_name: str | None = None) -> renderer
     return renderers.get_renderer(renderer_name, tokenizer=tokenizer)
 
 
+def _get_rubric_factory(rubric_name: str) -> Callable[[], Any] | None:
+    normalized = rubric_name.strip().lower()
+    if normalized == "dakota":
+        return None
+    if normalized == "cree":
+        from .cree import create_cree_rubric
+
+        return create_cree_rubric
+    raise ValueError(f"Unsupported rubric name: {rubric_name}")
+
+
+def _get_default_system_prompt(rubric_name: str) -> str:
+    if rubric_name.strip().lower() == "cree":
+        from .cree import CREE_DEFAULT_SYSTEM_PROMPT
+
+        return CREE_DEFAULT_SYSTEM_PROMPT
+    return DEFAULT_SYSTEM_PROMPT
+
+
 @chz.chz
 class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
     """Build train/eval datasets for Dakota RL on Tinker."""
@@ -145,10 +170,12 @@ class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
     task_filter: Sequence[str] | None = None
     include_hints: bool = True
     eval_group_size: int = 1
+    rubric_name: str = "dakota"
 
     async def __call__(self) -> tuple[RLDataset, RLDataset | None]:
         renderer = _get_renderer(self.model_name, self.renderer_name)
-        system_prompt = self.system_prompt or DEFAULT_SYSTEM_PROMPT
+        system_prompt = self.system_prompt or _get_default_system_prompt(self.rubric_name)
+        rubric_factory = _get_rubric_factory(self.rubric_name)
 
         bundle: DatasetBundle = build_dataset_bundle(
             dataset_path=self.dataset_path,
@@ -171,6 +198,7 @@ class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
             group_size=self.group_size,
             renderer=renderer,
             system_prompt=system_prompt,
+            rubric_factory=rubric_factory,
             shuffle=self.shuffle,
             seed=self.seed,
         )
@@ -183,6 +211,7 @@ class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
                 group_size=max(1, self.eval_group_size),
                 renderer=renderer,
                 system_prompt=system_prompt,
+                rubric_factory=rubric_factory,
                 shuffle=False,
                 seed=self.seed,
             )
