@@ -43,6 +43,7 @@ from tinker_cookbook.rl import train
 from dakota_rl_training.tinker_integration import (
     DakotaGrammarDatasetBuilder,
     export_reward_ledger,
+    install_tinker_metric_augmentation,
 )
 
 logger = logging.getLogger(__name__)
@@ -207,6 +208,7 @@ def main() -> int:
     parser = build_argument_parser()
     args = parser.parse_args()
     load_dotenv()
+    install_tinker_metric_augmentation()
 
     cfg = build_config(args)
     Path(cfg.log_path).mkdir(parents=True, exist_ok=True)
