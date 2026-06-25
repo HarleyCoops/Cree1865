@@ -10,6 +10,14 @@ structured volume can create enough initial training surface for a LoRA adapter
 and a modified GRPO reward loop to become useful enough for community review,
 correction, and second-stage training.[^lora][^grpo]
 
+<p align="center">
+  <a href="docs/story/index.html">
+    <img src="docs/story/source_contact_sheet.png" alt="Contact sheet of 98 pages from Watkins 1865" width="640">
+  </a>
+  <br>
+  <em>Visual record: 98 pages sampled from the full content range. <a href="docs/story/index.html">Open the story &rarr;</a></em>
+</p>
+
 This is not a claim that the current model is fluent Cree. It is a claim that
 the full pipeline now exists: source extraction, synthetic question-answer
 generation, deterministic reward design, Tinker training, a published Prime
@@ -107,10 +115,18 @@ Local source files:
 - `sources/CreeDictionary_1865_cihm_41985_complete.pdf`
 - Internet Archive identifier: `cihm_41985`
 
+A full visual record of the source — contact sheet, panoramic scope ribbon, orthography macro detail, and a verified archival inventory of Watkins' surviving papers — is in [`docs/story/`](docs/story/index.html).
+
 <p align="center">
   <img src="docs/source_dossier/screens/local_page_029-029.png" alt="Watkins 1865 dictionary page" width="360">
   <br>
   <em>Part I, page 1, local PDF page 29: English headword to Cree realization.</em>
+</p>
+
+<p align="center">
+  <img src="docs/story/two_directions.png" alt="Diptych: Part I English-to-Cree and Part II Cree-to-English" width="640">
+  <br>
+  <em>Two directions: Part I (English &rarr; Cree) and Part II (Cree &rarr; English) &mdash; the bidirectional structure that seeds both RL task surfaces.</em>
 </p>
 
 ## Pipeline

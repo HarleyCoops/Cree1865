@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cree1865 — One Volume</title>
+<style>
+  :root {
+    --paper: #EFE9DA;
+    --paper-deep: #E5DDC8;
+    --ink: #1C1814;
+    --sub: #6E6557;
+    --rule: #C9BEA3;
+    --accent: #7A2E33;
+    --max: 920px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.75;
+    font-size: 18px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 32px; }
+  .wide { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+  /* --- HERO --- */
+  .hero {
+    text-align: center;
+    padding: 120px 32px 80px;
+  }
+  .hero-eyebrow {
+    font-style: italic;
+    color: var(--sub);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: 52px;
+    font-weight: normal;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+  }
+  .hero-sub {
+    font-size: 19px;
+    color: var(--sub);
+    font-style: italic;
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* --- TITLE PAGE IMAGE --- */
+  .title-block {
+    text-align: center;
+    padding: 20px 0 80px;
+  }
+  .title-block img {
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(28,24,20,0.15);
+  }
+  .title-block .caption {
+    font-style: italic;
+    color: var(--sub);
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  /* --- SECTION --- */
+  section { padding: 60px 0; }
+  .section-label {
+    font-style: italic;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 34px;
+    font-weight: normal;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    letter-spacing: -0.005em;
+  }
+  .section-body {
+    font-size: 17px;
+    color: #3A342B;
+    max-width: 680px;
+    margin-bottom: 40px;
+  }
+  .section-body p { margin-bottom: 18px; }
+
+  /* --- FULL-WIDTH IMAGES --- */
+  .full-img { width: 100%; height: auto; display: block; margin: 20px 0; }
+  .img-frame {
+    box-shadow: 0 4px 24px rgba(28,24,20,0.08);
+    margin: 24px 0;
+  }
+  .img-caption {
+    font-style: italic;
+    color: var(--sub);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 40px;
+  }
+
+  /* --- RIBBON --- */
+  .ribbon-block { background: var(--paper-deep); padding: 60px 0; margin: 40px 0; }
+  .ribbon-block .full-img { box-shadow: 0 4px 20px rgba(28,24,20,0.10); }
+
+  /* --- STATS --- */
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 64px;
+    flex-wrap: wrap;
+    padding: 40px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    margin: 48px 0;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 36px; color: var(--ink); letter-spacing: -0.02em; }
+  .stat-label { font-size: 13px; color: var(--sub); font-style: italic; margin-top: 4px; }
+
+  /* --- PULL QUOTE --- */
+  .pull-quote {
+    font-size: 24px;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--ink);
+    text-align: center;
+    max-width: 640px;
+    margin: 60px auto;
+    padding: 0 32px;
+    position: relative;
+  }
+  .pull-quote::before {
+    content: '"';
+    position: absolute;
+    left: -8px; top: -20px;
+    font-size: 64px;
+    color: var(--rule);
+    font-family: Georgia, serif;
+  }
+
+  /* --- FOOTER --- */
+  .closer {
+    text-align: center;
+    padding: 100px 32px 80px;
+    border-top: 1px solid var(--rule);
+    margin-top: 60px;
+  }
+  .closer p {
+    font-style: italic;
+    color: var(--sub);
+    font-size: 16px;
+    max-width: 520px;
+    margin: 0 auto 16px;
+  }
+  .closer .links { margin-top: 32px; font-size: 14px; }
+  .closer .links a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  .closer .links a:hover { border-bottom-color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .hero h1 { font-size: 36px; }
+    .section-title { font-size: 26px; }
+    .stats-row { gap: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow">A Visual Record</div>
+  <h1>One volume.<br>Four hundred and ninety-two pages.</h1>
+  <div class="hero-sub">
+    Rev. E. A. Watkins' 1865 Dictionary of the Cree Language —
+    the single historical source behind Cree1865, photographed from the scan.
+  </div>
+</div>
+
+<div class="title-block">
+  <img src="title_page.png" alt="Title page of Watkins 1865 Cree dictionary, shadow-lifted from dark scan">
+  <div class="caption">Title page. London: Society for Promoting Christian Knowledge, 1865.<br>Internet Archive: cihm_41985. Shadow-lifted from a dark cover scan.</div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="section-label">The breadth</div>
+    <h2 class="section-title">This is the scope of the source.</h2>
+    <div class="section-body">
+      <p>Every page below is real ink from the 1865 scan. No reconstruction, no
+      synthetic fill. The contact sheet samples ninety-eight pages across the
+      full content range — front matter through Part I (English to Cree) and
+      Part II (Cree to English).</p>
+      <p>The point of showing this much paper is honesty about scale. One book
+      is not a corpus. It is a bounded, inspectable, datable object — and that
+      is exactly why it can serve as transparent supervision rather than opaque
+      scrape.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="wide">
+  <img class="full-img img-frame" src="source_contact_sheet.png" alt="Contact sheet of 98 sampled pages from Watkins 1865">
+  <div class="img-caption">Contact sheet: 98 pages sampled across the 463 content pages.</div>
+</div>
+
+<div class="ribbon-block">
+  <div class="wide">
+    <div class="section-label" style="text-align:center; margin-bottom: 16px;">The ribbon</div>
+    <img class="full-img" src="scope_ribbon.png" alt="Panoramic strip of 50 pages laid end to end">
+    <div class="img-caption">Fifty pages, laid end to end. Part I on the left; Part II begins at the marker.</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">492</div><div class="stat-label">scanned pages</div></div>
+    <div class="stat"><div class="stat-num">463</div><div class="stat-label">content pages</div></div>
+    <div class="stat"><div class="stat-num">19,560</div><div class="stat-label">extracted entries</div></div>
+    <div class="stat"><div class="stat-num">2</div><div class="stat-label">directions</div></div>
+  </div>
+
+  <section>
+    <div class="section-label">The structure</div>
+    <h2 class="section-title">One book, read in two directions.</h2>
+    <div class="section-body">
+      <p>Watkins arranged his dictionary bidirectionally. Part I runs English
+      headword to Cree realization. Part II reverses: Cree headword to English
+      gloss. The typographies differ — English roman type on the left, Cree
+      forms with their diacritical marks on the right.</p>
+      <p>This is not incidental. The two directions become two training surfaces.
+      The same source teaches the model both how to find a Cree word for an
+      English meaning and how to gloss a Cree form back into English.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="wide">
+  <img class="full-img img-frame" src="two_directions.png" alt="Diptych showing Part I English-to-Cree and Part II Cree-to-English pages side by side">
+  <div class="img-caption">Part I (left): English resolves to Cree. Part II (right): Cree resolves to English.</div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="section-label">The detail</div>
+    <h2 class="section-title">The marks that make it Cree.</h2>
+    <div class="section-body">
+      <p>Watkins used his own missionary Roman orthography — not modern Standard
+      Roman Orthography, and certainly not Cree syllabics. His marks include
+      macrons for vowel length, circumflexes, hyphens joining morphemes, and
+      apostrophes marking glottal stops.</p>
+      <p>These diacritical marks are the difference between a word that means
+      one thing and a word that means another. The pipeline is designed to
+      preserve them through extraction and reward them in training — not flatten
+      them into ASCII.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="wide">
+  <img class="full-img img-frame" src="orthography_macro.png" alt="Three-panel macro study of Cree diacritical marks from 1865 letterpress">
+  <div class="img-caption">Macro crops from 1865 letterpress. Left: Part I entries. Center: individual Cree forms. Right: Part II entries.</div>
+</div>
+
+<div class="wrap">
+
+  <div class="pull-quote">
+    A dictionary entry is not just a word pair. It contains direction,
+    orthography, glosses, examples, variants, usage notes, and implied
+    contrasts. The source becomes executable supervision.
+  </div>
+
+  <section>
+    <div class="section-label">Provenance</div>
+    <h2 class="section-title">What the archive holds — and what it does not.</h2>
+    <div class="section-body">
+      <p>An archival search across Internet Archive, Canadiana, the Hudson's Bay
+      Company Archives, Library and Archives Canada, Peel's Prairie Provinces,
+      and the CMS archive at Birmingham confirms what is publicly accessible and
+      what is not.</p>
+      <p>Watkins' handwritten journals (1852&ndash;1863, sixty-seven items) survive
+      at the Cadbury Research Library, University of Birmingham. They are not
+      freely digitized. No confirmed photograph or portrait of Watkins exists in
+      any public digital archive. The visual record is the book itself — and
+      that is enough to begin.</p>
+      <p>The full inventory is preserved in
+      <a href="archival-sources-watkins.md" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--rule);">archival-sources-watkins.md</a>.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="closer">
+  <p>The old source is deliberate. It avoids collecting living speakers'
+  language without consent and keeps provenance honest. The artifact is openly
+  archival and does not impersonate contemporary Cree.</p>
+  <p>Old is safer on consent. It is not neutral, not correct, and does not by
+  itself settle community authority over the derived weights.</p>
+  <div class="links">
+    <a href="https://github.com/HarleyCoops/Cree1865">GitHub</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://huggingface.co/HarleyCooper/Cree1865">Hugging Face</a>
+    &nbsp;&middot;&nbsp;
+    <a href="../SOURCE_NOTES.md">Source Notes</a>
+  </div>
+</div>
+
+</body>
+</html>
