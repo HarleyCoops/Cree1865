@@ -54,26 +54,38 @@ The generated data lives under `data/cree_goal_run_20260624_full_dictionary/` lo
 
 ## Current Training Status
 
-Completed smoke run:
+Completed 1200-step run:
 
 - Base model: `Qwen/Qwen3.5-4B`
 - Dataset: `data/cree_goal_run_20260624_full_dictionary/training_datasets/rl_tasks_all.jsonl`
 - Renderer: `qwen3_5_disable_thinking`
-- Steps: 4
+- Steps: `1200`
+- Batch size / group size: `2 / 2`
+- Max sampled tokens: `64`
+- W&B run: [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4)
+- W&B project: `cree1865-tinker`
+- Final reward: `0.21`
+- Deduped mean reward: `0.18260238803447346`
+- Final parse success: `1.0`
+- Deduped mean parse success: `0.99875`
+- Tinker weights: `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/weights/final`
+- Tinker sampler weights: `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/sampler_weights/final`
+- Raw ledger: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think.csv`
+- Deduped ledger: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think_deduped.csv`
+
+Resume note:
+
+The first Tinker session stalled at local step 868 with `No progress made in 7200s`. The run was resumed under the same W&B run ID, `kjn02ee4`, from checkpoint `000800`. The final local raw ledger therefore has 1269 rows: 1200 unique steps plus 69 replay rows from steps 800-868. The deduped ledger keeps the last row per step for steps 0-1199.
+
+Completed smoke run:
+
+- Steps: `4`
 - Final reward: `0.1894479405034325`
 - Final parse success: `1.0`
 - Tinker weights: `tinker://096ba4d7-bccc-5d33-9209-e1a1a8d746dc:train:0/weights/final`
 - Ledger: `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_smoke_20260624_qwen35_4b_no_think.csv`
 
-Next run:
-
-- 1200 training steps
-- batch size 2
-- group size 2
-- max sampled tokens 64
-- W&B enabled through `WANDB_API_KEY`
-
-At the current small-model settings, 1200 steps is long but reasonable: the previous smoke timing suggests roughly 3-4 hours plus service overhead. It should not be treated as a final scale run.
+At these small-model settings, 1200 steps is long but feasible; the practical risk is Tinker service stalling, not the step count itself. Future longer runs should use checkpointed chunks and preserve a single W&B run ID when continuing the same experiment.
 
 ## Reward Surface
 

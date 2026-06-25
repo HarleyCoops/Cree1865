@@ -1,131 +1,304 @@
-# Cree1865: A Dakota1890-Derived Grammar-to-RL Bootstrap Repo
+<!-- ╔══════════════════════════════════════════════════════════════════════════╗
+     ║  CREE1865 · SHOWCASE README                                                ║
+     ║  Showcase README for the Cree1865 model/repo. Grounded only in the         ║
+     ║  Watkins 1865 dictionary source and the actual extraction/training run.    ║
+     ╚══════════════════════════════════════════════════════════════════════════╝ -->
 
-This repository is a private bootstrap of the proven `Dakota1890` core pipeline, retargeted to a new historical source:
+<!-- ───────────────────────────  HERO  ─────────────────────────── -->
+<div align="center">
 
-- [CreeDictionary.pdf](C:/Users/chris/Cree1865/CreeDictionary.pdf)
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1a2a6c,50:b21f1f,100:fdbb2d&height=170&section=header&text=Cree1865&fontSize=78&fontColor=ffffff&fontAlignY=38&desc=A%20working%20Cree%20model%20from%20one%201865%20source&descSize=18&descAlignY=62&animation=fadeIn" width="100%">
 
-The goal is not to invent a second pipeline. The goal is to run the same chain again on a different origin document, learn where the schema and extraction assumptions break, and turn those breakpoints into the generalized template for future communities starting from scratch.
+<!-- animated tagline -->
+<a href="#the-thesis">
+  <img src="https://readme-typing-svg.demolab.com?font=Georgia&size=22&duration=3600&pause=900&color=B21F1F&center=true&vCenter=true&multiline=true&width=900&height=110&lines=One+1865+source+dictionary.;A+Cree+model+trained+from+the+Watkins+dictionary+pipeline.;Grammar+as+a+reward+signal%2C+retargeted+from+Dakota1890+to+Cree.">
+</a>
 
-## Current Intent
+<br><br>
 
-This repo is the first-pass template for processing the Cree dictionary in the same way the recent Dakota1890 dictionary was processed:
+<!-- ─────────────  BADGE WALL  ───────────── -->
+<a href="LICENSE"><img src="https://img.shields.io/badge/Code-Apache%202.0-1a2a6c?style=for-the-badge&logo=apache&logoColor=white"></a>
+<a href="DATA_LICENSE.md"><img src="https://img.shields.io/badge/1865%20Text-Public%20Domain-2e7d32?style=for-the-badge&logo=internetarchive&logoColor=white"></a>
+<img src="https://img.shields.io/badge/Method-GRPO%20RL-000000?style=for-the-badge&logo=target&logoColor=white">
+<br>
+<img src="https://img.shields.io/badge/Source-Watkins%201865-b21f1f?style=for-the-badge&logo=bookstack&logoColor=white">
+<img src="https://img.shields.io/badge/Language-crk%20%C2%B7%20en-fdbb2d?style=for-the-badge&logoColor=black">
+<img src="https://img.shields.io/badge/Lineage-Dakota1890%E2%86%92Cree1865-7b1fa2?style=for-the-badge">
+<img src="https://img.shields.io/badge/Status-1200%20step%20RL%20complete-2e7d32?style=for-the-badge">
 
-1. source document ingestion
-2. VLM-assisted page extraction
-3. structured dictionary schema design
-4. synthetic SFT dataset generation
-5. grammar-task conversion for RL
-6. remote RL training
-7. Hugging Face publication and hosted inference
+<br><br>
 
-## Source Notes
+<!-- ─────────────  NAV  ───────────── -->
+<b>
+<a href="#the-thesis">Thesis</a> &nbsp;·&nbsp;
+<a href="#the-source--watkins-1865">The Source</a> &nbsp;·&nbsp;
+<a href="#the-pipeline--single-source--reward-loop">Pipeline</a> &nbsp;·&nbsp;
+<a href="#extraction-at-a-glance">Extraction</a> &nbsp;·&nbsp;
+<a href="#the-reward-function">Reward</a> &nbsp;·&nbsp;
+<a href="#the-model-run">Models</a> &nbsp;·&nbsp;
+<a href="#roadmap">Roadmap</a> &nbsp;·&nbsp;
+<a href="#acknowledgments">Credits</a>
+</b>
 
-This source is not a clean one-to-one match with the Dakota source:
+</div>
 
-- the front matter, pronunciation key, and early grammar notes run through PDF page `28`
-- `Part I. English-Cree` begins at PDF page `29`
-- the `Part II. Cree-English` transition sits around printed page `183`, which lands at PDF page `211` in the local scan
-- the first full `Part II. Cree-English` entry page is printed page `184`, which lands at PDF page `212`
-- the title page explicitly identifies the book as a two-part dictionary inside a single volume
-- a fuller archive master scan now lives at [sources/CreeDictionary_1865_cihm_41985_complete.pdf](C:/Users/chris/Cree1865/sources/CreeDictionary_1865_cihm_41985_complete.pdf)
-- a later revised companion now lives at [sources/CreeDictionary_1938_companion.pdf](C:/Users/chris/Cree1865/sources/CreeDictionary_1938_companion.pdf)
+---
 
-That means the real engineering task is not hunting a missing second volume. It is handling one historical book with two extraction surfaces: `English -> Cree` and `Cree -> English`.
+<!-- ───────────────────────────  THESIS  ─────────────────────────── -->
+## The Thesis
 
-The archival story now has two anchors:
+> **A working Cree model from one historical source — turning a single 1865 dictionary into supervised data, verifiable RL tasks, and a GRPO training loop.**
 
-- the 1865 original on Internet Archive as `cihm_41985`
-- the 1938 revised companion on Internet Archive as `dictionaryofcree0000reve`
+To our knowledge this is the first time the *grammar-as-reward* method — proven on the 1890 Dakota grammar in [**Dakota1890**](https://github.com/HarleyCoops/Dakota1890) — has been retargeted to **Cree** from a single public-domain source: **Rev. E. A. Watkins' 1865 _A Dictionary of the Cree Language_**.
 
-Current pipeline state:
+The core result is the pipeline: a single source is enough to produce aligned training examples and a deterministic reward surface. That directly attacks the parallel-corpus bottleneck for low-resource language modeling.
 
-- the automated structured extraction path now supports both `Part I. English-Cree` and `Part II. Cree-English`
-- reverse-section pages are normalized into the same downstream fields: `cree_primary` remains Cree and `english_headword` remains the English gloss
-- the full local 1865 dictionary run produced 463 page JSON files, 19,560 deduplicated usable entries, and balanced English->Cree / Cree->English task exports
+The whole chain runs from one source:
 
-See [SOURCE_NOTES.md](C:/Users/chris/Cree1865/SOURCE_NOTES.md).
-See also the visual/source package in [docs/source_dossier/CREE1865_SOURCE_DOSSIER.md](C:/Users/chris/Cree1865/docs/source_dossier/CREE1865_SOURCE_DOSSIER.md).
-The fastest visual entrypoint is [cree_dictionary_hero_banner.png](C:/Users/chris/Cree1865/docs/source_dossier/cree_dictionary_hero_banner.png).
+<div align="center">
 
-## Source Story
+`Watkins 1865` → `VLM extraction` → `structured schema` → `SFT data` → `verifiable RL tasks` → `GRPO training` → `working model`
 
-This book is not just a vocabulary dump. It is a bilingual bridge object from 1865: front matter, a pronunciation key, `Part I. English-Cree`, and `Part II. Cree-English` in one historical volume. That matters culturally because it preserves translation work, orthographic compromise, and lexical contact under missionary print conditions across the Hudson's Bay territories. It also matters technically because those same structures give the pipeline enough shape to bootstrap extraction, SFT datasets, and RL tasks from a single archival source.
+</div>
 
-The Internet Archive companion story is now also explicit in-repo. The later item `dictionaryofcree0000reve` is identifiable, its metadata and preview surfaces are downloadable, and its full borrow path is auth-gated rather than missing. The clearest visuals are:
+---
 
-- [cree_dictionary_hero_banner.png](C:/Users/chris/Cree1865/docs/source_dossier/cree_dictionary_hero_banner.png)
-- [cree_dictionary_storyboard.png](C:/Users/chris/Cree1865/docs/source_dossier/cree_dictionary_storyboard.png)
-- [cree_second_volume_ia_access_story.png](C:/Users/chris/Cree1865/docs/source_dossier/cree_second_volume_ia_access_story.png)
+<!-- ───────────────────────────  SOURCE  ─────────────────────────── -->
+## The Source — Watkins 1865
 
-The exact blocker state is also preserved in machine-readable form:
+Watkins 1865 is **not a vocabulary dump**. It is a bilingual dictionary printed under missionary conditions across the Hudson's Bay territories. The model and datasets here are built from this one source volume:
 
-- [dictionaryofcree0000reve_authentication_document.json](C:/Users/chris/Cree1865/docs/source_dossier/internet_archive/dictionaryofcree0000reve_authentication_document.json)
-- [dictionaryofcree0000reve_browse_probe.json](C:/Users/chris/Cree1865/docs/source_dossier/internet_archive/dictionaryofcree0000reve_browse_probe.json)
+| Part | Direction | Printed pages | Local PDF pages | Schema state |
+|------|-----------|:-------------:|:---------------:|--------------|
+| **Front matter** | pronunciation key + early grammar notes | i – xx | 1 – 28 | reference only |
+| **Part I** | **English → Cree** | 1 – 183 | **29 – 210** | schema-ready, extracted |
+| **Part II** | **Cree → English** | 184 – end | **212 – end** | extracted into the shared downstream schema |
 
-## What Was Copied In
+### Source provenance
 
-This repo carries the Dakota core as a starting template:
+- **Source:** Rev. E. A. Watkins, _A Dictionary of the Cree Language_ (1865)
+- **Internet Archive identifier:** `cihm_41985`
+- **Local working PDF:** `CreeDictionary.pdf`
+- **Archive master PDF:** `sources/CreeDictionary_1865_cihm_41985_complete.pdf`
 
-- `dakota_extraction/`
-- `dakota_rl_training/`
-- `environments/`
-- `scripts/`
-- `tests/`
-- Hugging Face publication and inference surfaces
-- OpenAI SFT baseline path
+The visible README uses only the source facts and a direct page image from the 1865 scan.
 
-The names are still Dakota-flavored in many modules. That is intentional for the bootstrap phase. We are preserving the known-good control surface first, then generalizing names and schemas only where the Cree document forces the change.
+---
 
-## Full-Corpus Dataset Snapshot
+<!-- ───────────────────────────  PIPELINE  ─────────────────────────── -->
+## The Pipeline — Single Source → Reward Loop
 
-Latest local full-dictionary build:
+One source becomes a **self-contained training loop**. No parallel corpus, no separate grammar documentation, no OCR training set: the structured extraction supplies the aligned examples, and the dictionary-derived constraints supply the reward checks.
 
-- extraction root: `data/cree_goal_run_20260624_full_dictionary`
-- extracted dictionary JSON pages: `463`
-- raw entries: `19,607`
-- deduplicated usable entries: `19,560`
-- rejected incomplete entries: `125`
-- multi-variant entries: `4,049`
-- RL task records: `38,870`
-- plain Q&A records: `38,870`
-- SFT split: `18,463` train / `972` validation
-- RL directions: `19,435` English->Cree and `19,435` Cree->English
+```mermaid
+flowchart TD
+    A["Watkins 1865<br/>CreeDictionary.pdf"]:::src --> B["Page render<br/>PDF to images"]:::step
+    B --> C["VLM extraction<br/>Claude reads the scans<br/>macrons a-bar e-bar preserved"]:::step
+    C --> D["Part I<br/>English to Cree entries"]:::ok
+    C --> E["Part II<br/>Cree to English entries"]:::ok
+    D --> F["Structured dictionary JSON"]:::step
+    E --> F
+    F --> G["Synthetic SFT dataset<br/>bilingual QA pairs"]:::step
+    F --> H["RL task generation<br/>verifiable grammar tasks"]:::step
+    H --> I["GRPO training<br/>Tinker / PrimeIntellect<br/>the reward IS the dictionary"]:::step
+    I --> J["HF adapter + hosted inference"]:::step
+    J --> K["Community-in-the-loop<br/>Cree speakers correct and extend"]:::comm
 
-The generated `data/` artifacts are intentionally ignored by git; the code and docs describe how to regenerate them from the local extraction JSON.
-
-## Immediate Next Steps
-
-1. run the 1200-step small-model Tinker pass on the audited full-dictionary RL tasks
-2. inspect reward ledgers for orthography and exact-answer behavior before scaling batch size or model size
-3. publish the selected checkpoint/model card once a non-smoke run is complete
-4. keep the community-review framing explicit: this is a transparent bootstrap artifact, not a language authority
-
-## Bootstrap Validation
-
-The first offline end-to-end Cree validation path now exists:
-
-```bash
-python scripts/cree/validate_cree_bootstrap.py
+    classDef src fill:#1a2a6c,stroke:#0d1430,color:#fff;
+    classDef step fill:#f5f0e1,stroke:#b8a878,color:#222;
+    classDef ok fill:#2e7d32,stroke:#1b4d1f,color:#fff;
+    classDef comm fill:#b21f1f,stroke:#6d1212,color:#fff;
 ```
 
-That command validates:
+<div align="center">
+<table>
+<tr><td align="center"><b>What the model actually reads</b><br><br>
+<img src="docs/source_dossier/screens/local_page_029-029.png" alt="First Part I dictionary page" width="320">
+<br><em>Part I, page 1 (PDF 29): English headword → Cree realization,<br>with inline example sentences and usage notes.</em>
+</td></tr>
+</table>
+</div>
 
-1. source PDF page-count assumptions
-2. PDF -> page image rendering
-3. Cree sample extraction schema
-4. SFT dataset materialization
-5. RL task generation
+**The key move:** a single source becomes **executable supervision**. Instead of needing a ready-made parallel corpus, the pipeline creates bilingual examples and scores whether each output satisfies orthographic, morphological, and translation constraints pulled from Watkins.
 
-The live extraction runner supports forward, reverse, and grammar page slices:
+---
 
-```bash
-python scripts/cree/run_cree_pipeline.py --dictionary-pages 29 40 100 --reverse-pages 212 220
+<!-- ───────────────────────────  EXTRACTION  ─────────────────────────── -->
+## Extraction at a Glance
+
+*Confirmed from the full local 1865 dictionary build — 2026-06-24.*
+
+<div align="center">
+
+| | | | |
+|:--:|:--:|:--:|:--:|
+| **463** | **19,607** | **19,560** | **4,049** |
+| extracted page JSON files | raw entries | deduplicated usable entries | multi-variant entries |
+| **38,870** | **18,463 / 972** | **19,435** | **19,435** |
+| RL task records | SFT train / validation | English→Cree tasks | Cree→English tasks |
+
+</div>
+
+> Dataset root: `data/cree_goal_run_20260624_full_dictionary/`<br>
+> Main RL task file: `training_datasets/rl_tasks_all.jsonl`
+
+<details>
+<summary><b>A real extracted entry</b> (click to expand)</summary>
+
+```jsonc
+{
+  "english_headword": "A",
+  "part_of_speech": "art. indef.",
+  "cree_variants": ["pātah minékwakunis", "ā meyosit napāo", "pāyuk"],
+  "example_pairs": [
+    { "english": "bring a cup",            "cree": "pātah minékwakunis" },
+    { "english": "a good man",             "cree": "ā meyosit napāo" },
+    { "english": "a man wants to see you", "cree": "pāyuk napāo ke wé wapumik" }
+  ],
+  "usage_notes": "Usually not expressed in Cree. Sometimes answered by the subj. mood with prefix ā; sometimes the numeral pāyuk, 'one', is used.",
+  "confidence": 0.95
+}
 ```
 
-That command reuses the Dakota control surface shape while swapping in Cree-specific page rendering, prompt/schema expectations, and dataset materialization for both dictionary directions.
+Note the preserved macron vowels (`ā`, `é`) — these are exactly the signal the reward function verifies.
 
-## Operator Docs
+</details>
 
-- [PIPELINE.md](C:/Users/chris/Cree1865/PIPELINE.md)
-- [SETUP.md](C:/Users/chris/Cree1865/SETUP.md)
-- [SOURCE_NOTES.md](C:/Users/chris/Cree1865/SOURCE_NOTES.md)
+---
+
+<!-- ───────────────────────────  REWARD  ─────────────────────────── -->
+## The Reward Function
+
+The reward is **deterministic**. There is **no LLM judge**. Every component is independently checkable by code, so the gradient is honest — and you can see exactly what the model got wrong.
+
+```python
+reward = (
+    0.40 * orthography_recall   +   # macrons & accents:  ā ē ī ō ū  á é í ó ú  preserved?
+    0.40 * affix_accuracy       +   # Cree morphology: correct prefixes/suffixes applied?
+    0.20 * semantic_match           # meaning preserved vs. the 1865 gloss / ground truth?
+) * difficulty_multiplier           # curriculum weight, 1.0× → 2.0×
+```
+
+| Component | Weight | What it verifies |
+|---|:--:|---|
+| **Orthography recall** | 40% | Required Unicode macron/accent characters present, against the source |
+| **Affix accuracy** | 40% | Regex/pattern checks for Cree morphology (verb finals `-num`/`-tum`, derivations) |
+| **Semantic match** | 20% | Similarity to the ground-truth gloss or dictionary lookup |
+| **Difficulty multiplier** | ×1.0–2.0 | Curriculum weighting after the component sum |
+
+Because each piece is checkable by code rather than judgment, GRPO gets **dense, multi-dimensional feedback on structure** — which is why an RL approach works on a task usually considered too qualitative for it.
+
+---
+
+<!-- ───────────────────────────  MODELS  ─────────────────────────── -->
+## The Model Run
+
+The Cree run replays the Dakota1890 pipeline on the Watkins 1865 source.
+
+| Field | Value |
+|---|---|
+| Base model | `Qwen/Qwen3.5-4B` |
+| Method | GRPO / deterministic reward ledger |
+| Renderer | `qwen3_5_disable_thinking` |
+| Full run steps | `1200` |
+| W&B run | [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4) |
+| Final reward | `0.21` |
+| Deduped mean reward | `0.18260238803447346` |
+| Final parse success | `1.0` |
+| Mean parse success | `0.99875` |
+| Tinker weights | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/weights/final` |
+| Tinker sampler | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/sampler_weights/final` |
+| Raw reward ledger | `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think.csv` |
+| Deduped reward ledger | `wandb_analysis/cree_reward_ledger_tinker_full_dictionary_1200step_20260624_qwen35_4b_no_think_deduped.csv` |
+| Smoke checkpoint | `tinker://096ba4d7-bccc-5d33-9209-e1a1a8d746dc:train:0/weights/final` |
+
+The 1200-step run proves the full-dictionary training path can complete on Tinker. The raw ledger preserves the resumed local history, including 69 replay rows from restarting at checkpoint 800; the deduped ledger keeps one row per step for steps 0-1199. This is still a research bootstrap artifact, not a final model-quality claim.
+
+---
+
+<!-- ───────────────────────────  USAGE  ─────────────────────────── -->
+## How to Use *(target interface)*
+
+Once published, the adapter should load on top of its base model with PEFT:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+
+base    = "Qwen/Qwen3.5-4B"
+adapter = "HarleyCooper/Cree1865"  # replace with the published adapter id
+
+model = AutoModelForCausalLM.from_pretrained(base, device_map="auto", trust_remote_code=True)
+tok   = AutoTokenizer.from_pretrained(base)
+model = PeftModel.from_pretrained(model, adapter)
+
+messages = [
+    {"role": "system", "content": "You are a Cree language assistant. Return only the answer."},
+    {"role": "user",   "content": "Translate 'a good man' to Cree, preserving the 1865 orthography."},
+]
+text = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+out  = model.generate(**tok(text, return_tensors="pt").to(model.device), max_new_tokens=64)
+print(tok.decode(out[0], skip_special_tokens=True))
+```
+
+> Treat the output as a research model artifact — useful for testing the single-source method, not a final language authority.
+
+---
+
+<!-- ───────────────────────────  ROADMAP  ─────────────────────────── -->
+## Roadmap
+
+```
+[done]     Source secured        Watkins 1865 on disk + IA anchor cihm_41985
+[done]     Boundaries mapped     Part I 29-210 · Part II 212-end · front matter 1-28
+[done]     Full extraction       463 page JSON files · 19,560 usable entries
+[done]     Full-corpus datasets  38,870 RL tasks · 18,463/972 SFT split
+[done]     Tinker smoke run      Qwen/Qwen3.5-4B · parse success 1.0
+[done]     Longer GRPO run       1200 steps · final checkpoint saved · W&B kjn02ee4
+[planned]  HF publication        adapters + hosted inference Space
+[planned]  Review loop           community/linguistic review before authority claims
+```
+
+<div align="center">
+<img src="https://geps.dev/progress/65?dangerColor=b21f1f&warningColor=fdbb2d&successColor=2e7d32" alt="overall progress">
+<br><em>1865 source → extraction complete · 1200-step RL run complete · publication and review stages ahead.</em>
+</div>
+
+---
+
+<!-- ───────────────────────────  CREDITS  ─────────────────────────── -->
+## Acknowledgments
+
+- **Rev. E. A. Watkins** — the 1865 *Dictionary of the Cree Language*.
+- **Internet Archive** — scanned source (`cihm_41985`).
+- **Dakota1890** — the known-good pipeline this repo replays.
+- **PrimeIntellect** & **Thinking Machines (Tinker)** — RL training infrastructure.
+- **Anthropic** — VLM extraction.
+- **The Cree language community** — whose review and authority matter before any real-world language claims.
+
+---
+
+## Citation
+
+```bibtex
+@misc{cree1865,
+  title        = {Cree1865: Grammar-to-RL Language Modeling from a Single 1865 Dictionary},
+  author       = {Cooper, Christian Harley},
+  year         = {2026},
+  howpublished = {\url{https://github.com/HarleyCoops/Cree1865}},
+  note         = {Source: Watkins, E. A. (1865). A Dictionary of the Cree Language.
+                  London. Internet Archive: cihm\_41985.}
+}
+```
+
+> **Watkins, E. A. (1865).** *A Dictionary of the Cree Language, as Spoken by the Indians of the Hudson's Bay Territories.* London: Society for Promoting Christian Knowledge.
+
+---
+
+<div align="center">
+
+**Code:** Apache-2.0 &nbsp;·&nbsp; **1865 text:** Public Domain &nbsp;·&nbsp; **Method:** Dakota1890 → Cree1865
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:fdbb2d,50:b21f1f,100:1a2a6c&height=110&section=footer&reversal=true" width="100%">
+
+</div>

@@ -79,6 +79,7 @@ coverage.xml
 # Logs
 *.log
 logs/
+wandb/
 prime-rl-framework/
 
 # Downloaded model weights (large files, should not be committed)
