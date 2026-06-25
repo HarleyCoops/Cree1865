@@ -58,6 +58,35 @@ That triplet is more valuable than a flat replacement answer because it teaches
 the model what kind of mistake it made. A bare correction says "say this
 instead." A narrative correction says why the first answer failed.
 
+## How Q&A Pairs Work Inside RL Training
+
+In the RL stage, a synthetic Q&A pair is not treated as a final truth object to
+memorize. It is treated as a prompt that can produce many candidate answers.
+For each prompt, the policy samples answer variations, sometimes called
+rollouts. The Cree environment then scores those variations against explicit
+rules: exact answer, answer containment, orthography preservation, character
+overlap, and concise length.[^qa-rl]
+
+That means the training run is not simply "show the model a synthetic question
+and copy the synthetic answer." It is closer to throwing synthetic 1865 dialogue
+against a rule surface and asking which outputs survive. The model gets better
+when its sampled outputs satisfy more of the verifier, and the reward ledger
+shows which rule channels are improving or failing.
+
+This also creates room for recursive expansion. A short dictionary lookup can
+be turned into longer prompts, reverse-direction prompts, contrastive prompts,
+orthography-sensitive prompts, and multi-clue prompts. The system can then
+sample longer answers and score them against the same source-bounded rules. In
+that sense the training surface is combinatorially large, though not literally
+infinite and not free to invent beyond the source and verifier.[^recursive-expansion]
+
+The community-in-the-loop phase begins after this archival and synthetic surface
+has been pushed as far as the rules can honestly take it. At that point, fluent
+speakers are not merely annotators for someone else's model. The intended end
+state is that the community has its own correction data, its own adapter
+weights, and authority over what counts as better language behavior. Language is
+not just content; it is a core part of human identity, memory, and sovereignty.[^language-sovereignty]
+
 ## The Source: Watkins 1865
 
 Watkins 1865 is a bilingual dictionary printed under missionary and colonial
@@ -90,15 +119,19 @@ flowchart TD
     A["Watkins 1865 dictionary"] --> B["PDF page render"]
     B --> C["VLM extraction"]
     C --> D["Structured dictionary schema"]
-    D --> E["Synthetic Q&A pairs"]
-    D --> F["Verifiable RL tasks"]
-    E --> G["LoRA / PEFT adaptation target"]
-    F --> H["Modified GRPO reward loop"]
-    H --> I["Tinker training run"]
+    D --> E["Synthetic Q&A prompt bank"]
+    D --> F["Dictionary and orthography rules"]
+    E --> G["Rollouts<br/>many answer variations"]
+    F --> H["Environment scoring"]
+    G --> H
+    H --> I["Modified GRPO update"]
     I --> J["Prime Verifier environment"]
     I --> K["Hugging Face model card"]
-    K --> L["Community correction loop"]
-    L --> M["Second-stage correction training"]
+    I --> L["Recursive synthetic expansion"]
+    L --> E
+    K --> M["Community correction loop"]
+    M --> N["Community-owned correction data and weights"]
+    N --> O["Second-stage correction training"]
 ```
 
 The key engineering move is that the source becomes executable supervision. The
@@ -328,6 +361,12 @@ model = PeftModel.from_pretrained(model, adapter)
 [^synthetic-surface]: Synthetic Q&A pairs are not treated as community speech. They are a way to expose relationships already present in the archival source so the model has enough supervised surface to begin adapting.
 
 [^correction-loop]: The correction-loop idea is modeled as prompt, flawed answer, and narrative correction. The narrative part is essential because it can carry usage, register, humor, context, and cultural judgment that a dictionary lookup cannot contain.
+
+[^qa-rl]: In this README, "rollout" means one sampled model answer to a prompt during RL training. Grouped rollouts let the reward function compare multiple answer attempts for the same underlying question.
+
+[^recursive-expansion]: "Near infinite" here means practically expandable through combinations of source entries, directions, prompt styles, answer lengths, and rule checks. It does not mean the system can create unlimited reliable language data without source constraints or human review.
+
+[^language-sovereignty]: The technical goal is not to centralize authority over a language in a model repository. It is to make a first model that a community can inspect, correct, govern, and, where desired, retrain into community-held weights.
 
 [^watkins]: Watkins, E. A. (1865). *A Dictionary of the Cree Language, as Spoken by the Indians of the Hudson's Bay Territories.* London: Society for Promoting Christian Knowledge. Internet Archive identifier: `cihm_41985`.
 
