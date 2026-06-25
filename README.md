@@ -24,7 +24,8 @@ make the model fluent by its own standards?[^community-test]
 | GitHub repository | `HarleyCoops/Cree1865` |
 | Hugging Face model card | [`HarleyCooper/Cree1865`](https://huggingface.co/HarleyCooper/Cree1865) |
 | Prime Verifier environment | `harleycooper/cree1865-dictionary-qa` v0.1.2 |
-| W&B training run | [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4) |
+| Initial W&B training run | [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4) |
+| Redesigned showcase W&B run | [`4om7k9ao`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/4om7k9ao) |
 | Tinker final weights reference | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/weights/final` |
 
 ## Why Synthetic Q&A Can Still Teach Something
@@ -204,7 +205,59 @@ drifted into a long hallucinated explanation, or preserved characters without
 getting the answer right. Those failures can be counted, inspected, and shown to
 linguists and community reviewers.[^interpretability]
 
-## Training Run
+## Redesigned Showcase Run (In Progress)
+
+On 2026-06-25, the project launched a fresh full-dictionary showcase run after
+replacing the inherited Dakota-style reward assumptions with a Cree-specific
+dictionary lookup rubric and an ordered, weighted dataset. This is a new
+experiment, not a continuation of the earlier run.
+
+Run configuration:
+
+| Field | Value |
+|---|---|
+| Base model | `Qwen/Qwen3-30B-A3B-Instruct-2507` |
+| Method | grouped rollout RL with Tinker `importance_sampling` objective |
+| Dataset | `rl_tasks_balanced_cree_showcase.jsonl` |
+| Weighted rows | 70,040 |
+| Original rows covered | 38,870 / 38,870 |
+| Direction balance | 35,020 English->Cree / 35,020 Cree->English |
+| Batch size / group size | 32 / 8 |
+| Planned steps | 2,189 |
+| LoRA rank | 64 |
+| W&B run | [`4om7k9ao`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/4om7k9ao) |
+
+Preliminary held-out eval snapshot from step 500:
+
+| Eval metric | Step 0 | Step 500 | Delta |
+|---|---:|---:|---:|
+| Overall verifier reward | 0.2358 | 0.3628 | +0.1270 |
+| Target-Cree reward | 0.2835 | 0.4233 | +0.1398 |
+| Target-English reward | 0.1322 | 0.2316 | +0.0994 |
+| Target-Cree exact match | 0.0029 | 0.0485 | +0.0456 |
+| Target-Cree containment | 0.0913 | 0.1441 | +0.0528 |
+| Target-Cree orthography | 0.4177 | 0.5400 | +0.1222 |
+| Target-Cree character F1 | 0.3504 | 0.6020 | +0.2515 |
+| Target-English character F1 | 0.2818 | 0.4003 | +0.1185 |
+
+This is a verifier-learning signal, not a fluency claim. The most useful early
+movement is in target-Cree character F1 and orthography preservation, while
+exact match remains low. The dashboard should be read through per-channel
+deltas and direction asymmetry rather than the scalar reward alone.
+
+For training visualization, use an isolated local W&B environment rather than
+changing the live training interpreter while a run is active. This workspace
+uses an ignored `.venv-wandb-viz/` environment because the system `wandb`
+executable resolves to an older CLI while PyPI reports `wandb==0.28.0` and
+`weave==0.52.43` as current:
+
+```powershell
+python -m venv .venv-wandb-viz
+.\.venv-wandb-viz\Scripts\python.exe -m pip install wandb==0.28.0 weave==0.52.43
+.\.venv-wandb-viz\Scripts\python.exe -m wandb --version
+```
+
+## Initial Training Run
 
 | Field | Value |
 |---|---|
@@ -348,6 +401,7 @@ model = PeftModel.from_pretrained(model, adapter)
 | SFT and RL task generation | done |
 | Cree-specific Prime Verifier | done |
 | 1200-step Tinker run | done |
+| Balanced full-dictionary showcase run | running |
 | Hugging Face model card | done |
 | Adapter packaging on Hugging Face | planned |
 | Community correction interface | planned |

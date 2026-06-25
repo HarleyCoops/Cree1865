@@ -52,6 +52,35 @@ The generated data lives under `data/cree_goal_run_20260624_full_dictionary/` lo
 
 ## Current Training Status
 
+Redesigned full-dictionary showcase run in progress:
+
+- Launch date: `2026-06-25`
+- Base model: `Qwen/Qwen3-30B-A3B-Instruct-2507`
+- Dataset: `data/cree_goal_run_20260624_full_dictionary/training_datasets/rl_tasks_balanced_cree_showcase.jsonl`
+- Weighted training rows: `70,040`
+- Original rows covered: `38,870 / 38,870`
+- Direction balance: `35,020 English->Cree / 35,020 Cree->English`
+- Objective: grouped rollout RL with Tinker `importance_sampling`
+- Batch size / group size: `32 / 8`
+- Planned steps: `2,189`
+- LoRA rank: `64`
+- W&B run: [`4om7k9ao`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/4om7k9ao)
+
+Preliminary held-out eval snapshot from step 500:
+
+| Eval metric | Step 0 | Step 500 | Delta |
+|---|---:|---:|---:|
+| Overall verifier reward | 0.2358 | 0.3628 | +0.1270 |
+| Target-Cree reward | 0.2835 | 0.4233 | +0.1398 |
+| Target-English reward | 0.1322 | 0.2316 | +0.0994 |
+| Target-Cree exact match | 0.0029 | 0.0485 | +0.0456 |
+| Target-Cree containment | 0.0913 | 0.1441 | +0.0528 |
+| Target-Cree orthography | 0.4177 | 0.5400 | +0.1222 |
+| Target-Cree character F1 | 0.3504 | 0.6020 | +0.2515 |
+| Target-English character F1 | 0.2818 | 0.4003 | +0.1185 |
+
+These numbers are preliminary verifier metrics, not evidence of fluency or community validation. The scalar reward is rubric-shaped; the more important signal is per-channel movement and the direction split between English->Cree and Cree->English.
+
 Completed 1200-step run:
 
 - Base model: `Qwen/Qwen3.5-4B`
