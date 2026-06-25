@@ -279,7 +279,28 @@ ask concrete questions:
 
 ## Current Limitations
 
-- The source is a missionary-era dictionary with colonial framing.
+- The source is a missionary-era dictionary with colonial framing. Choosing a
+  public-domain 1865 source is deliberate: it avoids collecting living speakers'
+  language without consent, and it keeps provenance honest — the artifact is
+  openly archival and does not impersonate contemporary Cree. Old is *safer* on
+  consent and provenance, but it is not neutral, not correct, and does not by
+  itself settle community authority over the derived weights.
+- "Cree" is a dialect continuum (Plains/y, Woods/th, Swampy/n, Moose/l, East),
+  not one standardized language. Watkins 1865 records one 19th-century Hudson's
+  Bay variety through a missionary's ear; it must never be presented as "the"
+  Cree language.
+- The reward function preserves Roman-orthography marks and does **not** handle
+  Cree syllabics, so the current tool may not serve the communities that read and
+  write primarily in syllabics.
+- There is **no named community partner with authority over this artifact yet**.
+  Community involvement is presently a roadmap item, which means the model was
+  built before the people it concerns were in the loop. The intended end state is
+  community-held correction data and weights, governed under Indigenous data
+  frameworks (OCAP®, CARE). See [`SOURCE_NOTES.md`](SOURCE_NOTES.md) for the full
+  governance statement.
+- A model smooths uncertainty into fluent-sounding confidence; this one must be
+  treated as a starting point for correction, never as a source of truth about
+  how Cree is spoken.
 - The extraction may preserve scan errors, source errors, and VLM mistakes.
 - Many tasks are dictionary lookups, not natural conversation.
 - The current reward verifies lookup behavior, not full communicative fluency.
