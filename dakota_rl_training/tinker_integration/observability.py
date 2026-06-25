@@ -40,6 +40,19 @@ CROSS_ENTROPY_KEYS = (
     "ce_loss",
 )
 NLL_KEYS = ("loss/nll", "nll", "nll_loss", "negative_log_likelihood")
+CREE_SLICE_TAGS = {
+    "target_cree": "target/cree",
+    "target_english": "target/english",
+    "english_to_cree": "direction/english_to_cree",
+    "cree_to_english": "direction/cree_to_english",
+}
+CREE_LEDGER_CHANNELS = {
+    "exact": "exact_raw",
+    "target_containment": "target_containment_raw",
+    "orthography": "orthography_raw",
+    "char_f1": "char_f1_raw",
+    "length": "length_raw",
+}
 
 
 def _is_number(value: Any) -> bool:
@@ -73,6 +86,45 @@ def _safe_perplexity(loss: float) -> float | None:
     if not math.isfinite(loss) or loss > 709.0:
         return None
     return math.exp(loss)
+
+
+def _add_cree_slice_aliases(metrics: MutableMapping[str, Any]) -> None:
+    for dashboard_prefix, raw_prefix in (("slice", "env"), ("eval/slice", "test/env")):
+        for slice_name, tag in CREE_SLICE_TAGS.items():
+            _set_if_number(
+                metrics,
+                f"{dashboard_prefix}/{slice_name}/reward_mean",
+                (f"{raw_prefix}/{tag}/reward/mean",),
+            )
+            _set_if_number(
+                metrics,
+                f"{dashboard_prefix}/{slice_name}/reward_std",
+                (f"{raw_prefix}/{tag}/reward/std",),
+            )
+            for dashboard_channel, ledger_key in CREE_LEDGER_CHANNELS.items():
+                _set_if_number(
+                    metrics,
+                    f"{dashboard_prefix}/{slice_name}/{dashboard_channel}",
+                    (f"{raw_prefix}/{tag}/ledger/{ledger_key}",),
+                )
+
+        target_cree = _first_number(metrics, (f"{dashboard_prefix}/target_cree/reward_mean",))
+        target_english = _first_number(metrics, (f"{dashboard_prefix}/target_english/reward_mean",))
+        if (
+            target_cree is not None
+            and target_english is not None
+            and not _is_number(metrics.get(f"{dashboard_prefix}/target_cree_gap"))
+        ):
+            metrics[f"{dashboard_prefix}/target_cree_gap"] = target_english - target_cree
+
+        english_to_cree = _first_number(metrics, (f"{dashboard_prefix}/english_to_cree/reward_mean",))
+        cree_to_english = _first_number(metrics, (f"{dashboard_prefix}/cree_to_english/reward_mean",))
+        if (
+            english_to_cree is not None
+            and cree_to_english is not None
+            and not _is_number(metrics.get(f"{dashboard_prefix}/direction_gap"))
+        ):
+            metrics[f"{dashboard_prefix}/direction_gap"] = cree_to_english - english_to_cree
 
 
 def augment_dashboard_metrics(metrics: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
@@ -192,6 +244,8 @@ def augment_dashboard_metrics(metrics: MutableMapping[str, Any]) -> MutableMappi
         total_samples = _first_number(metrics, ("env/all/total_episodes", "env/all/total_turns"))
         if total_samples and not _is_number(metrics.get("perf/samples_per_sec")):
             metrics["perf/samples_per_sec"] = total_samples / step_time
+
+    _add_cree_slice_aliases(metrics)
 
     return metrics
 

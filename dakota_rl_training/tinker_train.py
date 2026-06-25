@@ -65,12 +65,14 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size", type=int, default=32, help="Number of env groups per batch.")
     parser.add_argument("--group-size", type=int, default=16, help="Rollouts per GRPO group.")
     parser.add_argument("--max-examples", type=int, default=-1, help="Limit number of training examples.")
+    parser.add_argument("--max-steps", type=int, default=None, help="Limit number of Tinker training iterations.")
     parser.add_argument("--eval-examples", type=int, default=-1, help="Limit number of eval examples.")
     parser.add_argument("--eval-fraction", type=float, default=0.1, help="Eval split when eval_path not provided.")
     parser.add_argument("--system-prompt", default=None, help="Override the default system prompt.")
     parser.add_argument("--difficulty-filter", nargs="*", default=None, help="Filter dataset difficulties (case-insensitive).")
     parser.add_argument("--task-filter", nargs="*", default=None, help="Filter dataset task types.")
     parser.add_argument("--seed", type=int, default=42, help="Dataset shuffling seed.")
+    parser.add_argument("--no-shuffle", action="store_true", help="Preserve dataset order for curriculum/showcase runs.")
     parser.add_argument("--max-tokens", type=int, default=256, help="Max sampled tokens per completion.")
     parser.add_argument("--temperature", type=float, default=0.9, help="Sampling temperature.")
     parser.add_argument("--learning-rate", type=float, default=4e-5, help="Optimizer learning rate.")
@@ -114,6 +116,7 @@ def build_dataset_builder(args: argparse.Namespace) -> DakotaGrammarDatasetBuild
         difficulty_filter=args.difficulty_filter,
         task_filter=args.task_filter,
         seed=args.seed,
+        shuffle=not args.no_shuffle,
     )
 
 
@@ -153,6 +156,7 @@ def build_config(args: argparse.Namespace) -> train.Config:
         async_config=async_config,
         stream_minibatch_config=stream_config,
         num_groups_to_log=args.num_groups_to_log,
+        max_steps=args.max_steps,
     )
 
 

@@ -29,12 +29,14 @@ class DakotaGrammarEnvGroupBuilder(EnvGroupBuilder):
         system_prompt: str,
         group_size: int,
         rubric_factory: Callable[[], Any] | None = None,
+        rubric_name: str = "dakota",
     ):
         self.example = example
         self.renderer = renderer
         self.system_prompt = system_prompt
         self.group_size = group_size
         self.rubric_factory = rubric_factory
+        self.rubric_name = rubric_name
 
     async def make_envs(self):
         return [
@@ -52,11 +54,14 @@ class DakotaGrammarEnvGroupBuilder(EnvGroupBuilder):
         return [(0.0, {}) for _ in trajectory_group]
 
     def logging_tags(self) -> list[str]:
-        return [
-            "dakota",
+        tags = [
+            self.rubric_name,
             f"difficulty/{self.example.difficulty}",
             f"task/{self.example.task}",
         ]
+        if self.rubric_name == "cree":
+            tags.extend(_cree_direction_tags(self.example))
+        return tags
 
 
 class DakotaGrammarDataset(RLDataset):
@@ -68,6 +73,7 @@ class DakotaGrammarDataset(RLDataset):
         renderer: renderers.Renderer,
         system_prompt: str,
         rubric_factory: Callable[[], Any] | None = None,
+        rubric_name: str = "dakota",
         shuffle: bool = True,
         seed: int = 0,
     ):
@@ -81,6 +87,7 @@ class DakotaGrammarDataset(RLDataset):
         self.renderer = renderer
         self.system_prompt = system_prompt
         self.rubric_factory = rubric_factory
+        self.rubric_name = rubric_name
 
     def __len__(self) -> int:
         return math.ceil(len(self.examples) / self.batch_size)
@@ -96,9 +103,19 @@ class DakotaGrammarDataset(RLDataset):
                 system_prompt=self.system_prompt,
                 group_size=self.group_size,
                 rubric_factory=self.rubric_factory,
+                rubric_name=self.rubric_name,
             )
             for example in batch
         ]
+
+
+def _cree_direction_tags(example: DakotaGrammarExample) -> list[str]:
+    task_type = str(example.info.get("task_type") or example.task).lower()
+    if task_type == "word_translation":
+        return ["language/cree", "direction/english_to_cree", "target/cree"]
+    if task_type == "reverse_translation":
+        return ["language/cree", "direction/cree_to_english", "target/english"]
+    return ["language/cree", "direction/unknown", "target/unknown"]
 
 
 def _dataset_to_examples(dataset: Dataset | None) -> list[DakotaGrammarExample]:
@@ -199,6 +216,7 @@ class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
             renderer=renderer,
             system_prompt=system_prompt,
             rubric_factory=rubric_factory,
+            rubric_name=self.rubric_name,
             shuffle=self.shuffle,
             seed=self.seed,
         )
@@ -212,6 +230,7 @@ class DakotaGrammarDatasetBuilder(RLDatasetBuilder):
                 renderer=renderer,
                 system_prompt=system_prompt,
                 rubric_factory=rubric_factory,
+                rubric_name=self.rubric_name,
                 shuffle=False,
                 seed=self.seed,
             )

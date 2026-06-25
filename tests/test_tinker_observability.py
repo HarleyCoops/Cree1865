@@ -64,6 +64,39 @@ def test_augment_dashboard_metrics_adds_reward_eval_and_perf_aliases():
     assert metrics["eval/parse_success"] == 1.0
 
 
+def test_augment_dashboard_metrics_adds_cree_direction_and_target_aliases():
+    metrics = {
+        "env/target/cree/reward/mean": 0.18,
+        "env/target/english/reward/mean": 0.31,
+        "env/target/cree/ledger/orthography_raw": 0.44,
+        "env/target/cree/ledger/char_f1_raw": 0.52,
+        "env/direction/english_to_cree/reward/mean": 0.18,
+        "env/direction/cree_to_english/reward/mean": 0.31,
+        "test/env/target/cree/reward/mean": 0.21,
+        "test/env/target/english/reward/mean": 0.35,
+        "test/env/target/cree/ledger/exact_raw": 0.09,
+        "test/env/target/cree/ledger/target_containment_raw": 0.16,
+        "test/env/direction/english_to_cree/ledger/char_f1_raw": 0.49,
+    }
+
+    augment_dashboard_metrics(metrics)
+
+    assert metrics["slice/target_cree/reward_mean"] == 0.18
+    assert metrics["slice/target_english/reward_mean"] == 0.31
+    assert math.isclose(metrics["slice/target_cree_gap"], 0.13)
+    assert metrics["slice/target_cree/orthography"] == 0.44
+    assert metrics["slice/target_cree/char_f1"] == 0.52
+    assert metrics["slice/english_to_cree/reward_mean"] == 0.18
+    assert metrics["slice/cree_to_english/reward_mean"] == 0.31
+    assert math.isclose(metrics["slice/direction_gap"], 0.13)
+    assert metrics["eval/slice/target_cree/reward_mean"] == 0.21
+    assert metrics["eval/slice/target_english/reward_mean"] == 0.35
+    assert math.isclose(metrics["eval/slice/target_cree_gap"], 0.14)
+    assert metrics["eval/slice/target_cree/exact"] == 0.09
+    assert metrics["eval/slice/target_cree/target_containment"] == 0.16
+    assert metrics["eval/slice/english_to_cree/char_f1"] == 0.49
+
+
 class _TrajectoryGroup:
     def __init__(self, rewards):
         self._rewards = rewards

@@ -153,3 +153,69 @@ def test_tinker_train_accepts_explicit_cree_rubric_name() -> None:
     builder = build_dataset_builder(args)
 
     assert builder.rubric_name == "cree"
+
+
+def test_tinker_train_accepts_ordered_bounded_cree_showcase_run() -> None:
+    from dakota_rl_training.tinker_train import build_argument_parser, build_config
+
+    args = build_argument_parser().parse_args(
+        [
+            "--rubric-name",
+            "cree",
+            "--max-steps",
+            "2400",
+            "--no-shuffle",
+        ]
+    )
+    cfg = build_config(args)
+
+    assert cfg.max_steps == 2400
+    assert cfg.dataset_builder.shuffle is False
+
+
+def test_tinker_group_builder_tags_cree_direction_and_target_language() -> None:
+    from dakota_rl_training.tinker_integration.dataset import DakotaGrammarEnvGroupBuilder
+    from dakota_rl_training.tinker_integration.types import DakotaGrammarExample
+
+    example = DakotaGrammarExample(
+        example_id="cree_word_translation",
+        prompt="Translate English into Cree.",
+        answer="nēhiyaw",
+        info={"task_type": "word_translation", "difficulty": "hard"},
+        task="word_translation",
+    )
+    builder = DakotaGrammarEnvGroupBuilder(
+        example=example,
+        renderer=None,
+        system_prompt="",
+        group_size=8,
+        rubric_name="cree",
+    )
+
+    assert "language/cree" in builder.logging_tags()
+    assert "direction/english_to_cree" in builder.logging_tags()
+    assert "target/cree" in builder.logging_tags()
+
+
+def test_tinker_group_builder_tags_cree_to_english_reverse_lookup() -> None:
+    from dakota_rl_training.tinker_integration.dataset import DakotaGrammarEnvGroupBuilder
+    from dakota_rl_training.tinker_integration.types import DakotaGrammarExample
+
+    example = DakotaGrammarExample(
+        example_id="cree_reverse_translation",
+        prompt="Translate Cree into English.",
+        answer="person",
+        info={"task_type": "reverse_translation", "difficulty": "hard"},
+        task="reverse_translation",
+    )
+    builder = DakotaGrammarEnvGroupBuilder(
+        example=example,
+        renderer=None,
+        system_prompt="",
+        group_size=8,
+        rubric_name="cree",
+    )
+
+    assert "language/cree" in builder.logging_tags()
+    assert "direction/cree_to_english" in builder.logging_tags()
+    assert "target/english" in builder.logging_tags()
