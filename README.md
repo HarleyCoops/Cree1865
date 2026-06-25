@@ -1,5 +1,9 @@
 # Cree1865
 
+<p align="center">
+  <img src="docs/story/title_page.png" alt="Title page of Watkins' 1865 A Dictionary of the Cree Language" width="420">
+</p>
+
 > **Cree1865 is a hypothesis test: can one historical language volume be enough to build, train, publish, and improve a working low-resource language model?**[^single-volume]
 
 Cree1865 is the second public model artifact in this research line after the
@@ -158,6 +162,12 @@ mistakes visible.
 
 ## Extraction Snapshot
 
+<p align="center">
+  <img src="docs/story/scope_ribbon.png" alt="Panoramic strip of 50 pages sampled across the full content range" width="640">
+  <br>
+  <em>Fifty pages laid end to end &mdash; the physical breadth of one volume.</em>
+</p>
+
 Confirmed from the full local build on 2026-06-24:
 
 | Measure | Count |
@@ -214,6 +224,12 @@ reward = (
 | Orthography recall | 0.20 | Cree marks, hyphens, apostrophes, and accents are preserved |
 | Character F1 | 0.20 | Spelling-level overlap for near misses |
 | Concise length | 0.15 | The model does not pad a lookup answer with unsupported text |
+
+<p align="center">
+  <img src="docs/story/orthography_macro.png" alt="Three-panel macro of Cree diacritical marks from 1865 letterpress" width="640">
+  <br>
+  <em>The marks the reward function must preserve &mdash; macrons, circumflexes, hyphens, apostrophes in 1865 letterpress.</em>
+</p>
 
 This matters for interpretability. If the model fails, the failure is not just
 "bad answer." It can fail because it missed the target, lost the orthography,
