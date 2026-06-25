@@ -15,8 +15,6 @@ tags:
 - grpo
 - tinker
 - thinking-machines
-datasets:
-- local:cree_goal_run_20260624_full_dictionary
 ---
 
 # Cree1865 Tinker RL Adapter
