@@ -1,5 +1,13 @@
 # Cree1865
 
+> **Live training run:** `cree1865-synthetic-expansion-v1` launched on
+> 2026-06-26 with the Cree-specific rubric, expanded synthetic Q&A prompts,
+> `Qwen/Qwen3-30B-A3B-Instruct-2507`, `batch-size 16`, `group-size 8`, and
+> `max-steps 800`. Follow the run on
+> [W&B](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl)
+> or read the local run plan in
+> [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md).
+
 <p align="center">
   <img src="docs/story/title_page.png" alt="Title page of Watkins' 1865 A Dictionary of the Cree Language" width="420">
 </p>
@@ -36,9 +44,8 @@ make the model fluent by its own standards?[^community-test]
 | GitHub repository | `HarleyCoops/Cree1865` |
 | Hugging Face model card | [`HarleyCooper/Cree1865`](https://huggingface.co/HarleyCooper/Cree1865) |
 | Prime Verifier environment | `harleycooper/cree1865-dictionary-qa` v0.1.2 |
-| Initial W&B training run | [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4) |
-| Redesigned showcase W&B run | [`4om7k9ao`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/4om7k9ao) |
-| Tinker final weights reference | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/weights/final` |
+| Live W&B training run | [`hda2wqhl`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl) |
+| Live run details | [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md) |
 
 ## Why Synthetic Q&A Can Still Teach Something
 
@@ -237,82 +244,42 @@ drifted into a long hallucinated explanation, or preserved characters without
 getting the answer right. Those failures can be counted, inspected, and shown to
 linguists and community reviewers.[^interpretability]
 
-## Redesigned Showcase Run (In Progress)
+## Live Synthetic Expansion Run
 
-On 2026-06-25, the project launched a fresh full-dictionary showcase run after
-replacing the inherited Dakota-style reward assumptions with a Cree-specific
-dictionary lookup rubric and an ordered, weighted dataset. This is a new
-experiment, not a continuation of the earlier run.
-
-Run configuration:
+The current public run is the synthetic-expansion experiment launched on
+2026-06-26. It replaces the smaller direct-lookup task surface with anchored
+prompt variants generated from the same extracted Watkins dictionary answers.
+The answers remain dictionary-bound; only the question surface changes.
 
 | Field | Value |
 |---|---|
+| W&B run | [`hda2wqhl`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl) |
+| Run name | `cree1865-synthetic-expansion-v1` |
+| Tinker session | `9d734fdb-7851-5f2f-9949-e9e574eb9a55` |
 | Base model | `Qwen/Qwen3-30B-A3B-Instruct-2507` |
 | Method | grouped rollout RL with Tinker `importance_sampling` objective |
-| Dataset | `rl_tasks_balanced_cree_showcase.jsonl` |
-| Weighted rows | 70,040 |
-| Original rows covered | 38,870 / 38,870 |
-| Direction balance | 35,020 English->Cree / 35,020 Cree->English |
-| Batch size / group size | 32 / 8 |
-| Planned steps | 2,189 |
-| LoRA rank | 64 |
-| W&B run | [`4om7k9ao`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/4om7k9ao) |
+| Rubric | `cree` |
+| Dataset | `rl_tasks_synthetic_expanded_balanced.jsonl` |
+| Eval file | `rl_tasks_synthetic_expanded_balanced_eval.jsonl` |
+| Anchored Q&A rows | 38,870 |
+| Synthetic RL rows before balancing | 272,090 |
+| Balanced training rows | 490,280 |
+| Eval probe rows | 2,048 |
+| Direction balance | 245,140 English->Cree / 245,140 Cree->English |
+| Batch size / group size | 16 / 8 |
+| Planned steps | 800 |
+| Approximate rollout budget | 102,400 sampled completions before eval overhead |
+| LoRA rank | 32 |
+| Local log path | `dakota_rl_training/outputs/cree1865_synthetic_expansion_v1` |
 
-Preliminary held-out eval snapshot from step 500:
+The live dashboard should be read through per-channel movement and direction
+asymmetry, not the scalar reward alone. A lookup rubric's absolute reward is
+rubric-shaped; the important questions are whether English->Cree generation,
+Cree orthography preservation, exact/containment channels, and Cree->English
+reverse lookup improve under held-out prompts.
 
-| Eval metric | Step 0 | Step 500 | Delta |
-|---|---:|---:|---:|
-| Overall verifier reward | 0.2358 | 0.3628 | +0.1270 |
-| Target-Cree reward | 0.2835 | 0.4233 | +0.1398 |
-| Target-English reward | 0.1322 | 0.2316 | +0.0994 |
-| Target-Cree exact match | 0.0029 | 0.0485 | +0.0456 |
-| Target-Cree containment | 0.0913 | 0.1441 | +0.0528 |
-| Target-Cree orthography | 0.4177 | 0.5400 | +0.1222 |
-| Target-Cree character F1 | 0.3504 | 0.6020 | +0.2515 |
-| Target-English character F1 | 0.2818 | 0.4003 | +0.1185 |
-
-This is a verifier-learning signal, not a fluency claim. The most useful early
-movement is in target-Cree character F1 and orthography preservation, while
-exact match remains low. The dashboard should be read through per-channel
-deltas and direction asymmetry rather than the scalar reward alone.
-
-For training visualization, use an isolated local W&B environment rather than
-changing the live training interpreter while a run is active. This workspace
-uses an ignored `.venv-wandb-viz/` environment because the system `wandb`
-executable resolves to an older CLI while PyPI reports `wandb==0.28.0` and
-`weave==0.52.43` as current:
-
-```powershell
-python -m venv .venv-wandb-viz
-.\.venv-wandb-viz\Scripts\python.exe -m pip install wandb==0.28.0 weave==0.52.43
-.\.venv-wandb-viz\Scripts\python.exe -m wandb --version
-```
-
-## Initial Training Run
-
-| Field | Value |
-|---|---|
-| Base model | `Qwen/Qwen3.5-4B` |
-| Method | modified GRPO with deterministic reward ledger |
-| Renderer | `qwen3_5_disable_thinking` |
-| Steps | 1200 |
-| Batch size / group size | 2 / 2 |
-| Max sampled tokens | 64 |
-| W&B run | [`kjn02ee4`](https://wandb.ai/christian-cooper-us/cree1865-tinker/runs/kjn02ee4) |
-| Final reward | 0.21 |
-| Deduped mean reward | 0.18260238803447346 |
-| Final parse success | 1.0 |
-| Deduped mean parse success | 0.99875 |
-| Final weights reference | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/weights/final` |
-| Sampler weights reference | `tinker://bf25e2aa-6b3a-557c-8133-fadf5ebcba8f:train:0/sampler_weights/final` |
-
-The first Tinker session stalled at local step 868 and was resumed under the
-same W&B run ID from checkpoint 800. The raw ledger therefore includes 69 replay
-rows; the deduped ledger keeps one row per step for steps 0-1199.
-
-The run proves that the full-dictionary training path can execute end to end.
-It does not prove that the resulting model is fluent or community-ready.
+For the exact expansion and launch commands, see
+[`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md).
 
 ## The Core Test Still Ahead
 
@@ -416,8 +383,8 @@ Target adapter interface once adapter files are published:
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
-base = "Qwen/Qwen3.5-4B"
-adapter = "HarleyCooper/Cree1865"
+base = "Qwen/Qwen3-30B-A3B-Instruct-2507"
+adapter = "HarleyCooper/Cree1865"  # final adapter files are not yet published
 
 model = AutoModelForCausalLM.from_pretrained(base, device_map="auto", trust_remote_code=True)
 tok = AutoTokenizer.from_pretrained(base)
@@ -432,9 +399,9 @@ model = PeftModel.from_pretrained(model, adapter)
 | Full dictionary extraction | done |
 | SFT and RL task generation | done |
 | Cree-specific Prime Verifier | done |
-| 1200-step Tinker run | done |
-| Balanced full-dictionary showcase run | running |
-| Hugging Face model card | done |
+| Synthetic expansion dataset | done |
+| 800-step synthetic-expansion Tinker run | running |
+| Hugging Face model card | live-run update |
 | Adapter packaging on Hugging Face | planned |
 | Community correction interface | planned |
 | Second-stage correction LoRA training | planned |
@@ -457,7 +424,7 @@ model = PeftModel.from_pretrained(model, adapter)
 
 [^single-volume]: "Enough" means enough to create a first runnable model and correction loop, not enough to replace fluent speakers or contemporary community authority.
 
-[^published-artifact]: "Published model artifact" refers to the public Hugging Face repository and model card for `HarleyCooper/Cree1865`, plus the Prime Verifier environment and Tinker weight references recorded in this repo. The Hugging Face repo currently contains the card metadata; final adapter packaging remains a roadmap item.
+[^published-artifact]: "Published model artifact" refers to the public Hugging Face repository and model card for `HarleyCooper/Cree1865`, plus the Prime Verifier environment and live Tinker/W&B training record. The Hugging Face repo currently contains the card metadata; final adapter packaging remains a roadmap item.
 
 [^lora]: LoRA, or Low-Rank Adaptation, trains a small set of adapter weights instead of updating every parameter in the base model. That makes repeated retraining practical when new correction data arrives.
 
