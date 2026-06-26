@@ -1,11 +1,13 @@
 # Cree1865
 
-> **Live training run:** `cree1865-synthetic-expansion-v1` launched on
+> **Completed training run:** `cree1865-synthetic-expansion-v1` launched on
 > 2026-06-26 with the Cree-specific rubric, expanded synthetic Q&A prompts,
 > `Qwen/Qwen3-30B-A3B-Instruct-2507`, `batch-size 16`, `group-size 8`, and
-> `max-steps 800`. Follow the run on
+> `max-steps 800`. Inspect the run on
 > [W&B](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl)
-> or read the local run plan in
+> and test the final sampler through the
+> [Cree1865 Tinker Inference Space](https://huggingface.co/spaces/HarleyCooper/Cree1865-Tinker-Inference).
+> Read the local run plan in
 > [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md).
 
 <p align="center">
@@ -45,6 +47,7 @@ make the model fluent by its own standards?[^community-test]
 | Hugging Face model card | [`HarleyCooper/Cree1865`](https://huggingface.co/HarleyCooper/Cree1865) |
 | Prime Verifier environment | `harleycooper/cree1865-dictionary-qa` v0.1.2 |
 | Live W&B training run | [`hda2wqhl`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl) |
+| Hugging Face inference Space | [`HarleyCooper/Cree1865-Tinker-Inference`](https://huggingface.co/spaces/HarleyCooper/Cree1865-Tinker-Inference) |
 | Explained W&B dashboard | [`Cree1865 Synthetic Expansion V1 Explained Dashboard`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/reports/Cree1865-Synthetic-Expansion-V1-Explained-Dashboard--VmlldzoxNzM1MDY2MQ==) |
 | 3D metrics companion | [`visualizations/cree3d`](visualizations/cree3d) |
 | Live run details | [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md) |
