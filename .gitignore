@@ -32,6 +32,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+node_modules/
 
 # IDE
 .idea/
@@ -99,6 +100,7 @@ wandb_visualizations/qwen4b/
 wandb_analysis/reward_ledger_qwen4b.csv
 wandb_analysis/reward_ledger_qwen4b.png
 wandb_analysis/ledger_snippet_qwen4b.txt
+visualizations/cree3d/artifacts/
 
 # Explicitly ignore the specific large files that caused issues
 wandb_analysis/published/*.tar.gz

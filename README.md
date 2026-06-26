@@ -45,6 +45,8 @@ make the model fluent by its own standards?[^community-test]
 | Hugging Face model card | [`HarleyCooper/Cree1865`](https://huggingface.co/HarleyCooper/Cree1865) |
 | Prime Verifier environment | `harleycooper/cree1865-dictionary-qa` v0.1.2 |
 | Live W&B training run | [`hda2wqhl`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/runs/hda2wqhl) |
+| Explained W&B dashboard | [`Cree1865 Synthetic Expansion V1 Explained Dashboard`](https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/reports/Cree1865-Synthetic-Expansion-V1-Explained-Dashboard--VmlldzoxNzM1MDY2MQ==) |
+| 3D metrics companion | [`visualizations/cree3d`](visualizations/cree3d) |
 | Live run details | [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md) |
 
 ## Why Synthetic Q&A Can Still Teach Something
@@ -277,6 +279,29 @@ asymmetry, not the scalar reward alone. A lookup rubric's absolute reward is
 rubric-shaped; the important questions are whether English->Cree generation,
 Cree orthography preservation, exact/containment channels, and Cree->English
 reverse lookup improve under held-out prompts.
+
+The native W&B explained dashboard is the primary visualization surface:
+
+```text
+https://wandb.ai/christian-cooper-us/thinking-machines-qwen3-30b/reports/Cree1865-Synthetic-Expansion-V1-Explained-Dashboard--VmlldzoxNzM1MDY2MQ==
+```
+
+It pairs W&B charts with short descriptions of what each metric means, including
+reward channels, direction asymmetry, entropy/KL behavior, throughput, and
+expert-token utilization. The optional Three.js companion in
+[`visualizations/cree3d`](visualizations/cree3d) is a local shape-of-training
+view: each visible metric becomes a normalized 3D ribbon over training step. It
+is useful for spotting timing relationships, but it should not replace the W&B
+plots when reading exact values.
+
+Refresh and run the local companion:
+
+```bash
+python scripts/analysis/export_cree_3d_metrics.py
+cd visualizations/cree3d
+npm install
+npm run dev
+```
 
 For the exact expansion and launch commands, see
 [`docs/cree_synthetic_expansion_training.md`](docs/cree_synthetic_expansion_training.md).

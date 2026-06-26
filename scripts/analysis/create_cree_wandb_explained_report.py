@@ -64,6 +64,63 @@ signals.
         """.strip()
     )
 
+    summary_panels: list[object] = [
+        wr.ScalarChart(
+            title="Run Completion",
+            metric="progress/done_frac",
+            layout=wr.Layout(x=0, y=0, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Fraction of the configured 800-step run completed. This is operational progress, not model quality.",
+            layout=wr.Layout(x=4, y=0, w=4, h=4),
+        ),
+        wr.ScalarChart(
+            title="Current Reward Mean",
+            metric="reward/mean",
+            layout=wr.Layout(x=8, y=0, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Average training-batch verifier reward. Useful as a live signal, but the scalar is rubric-shaped and not fluency.",
+            layout=wr.Layout(x=12, y=0, w=4, h=4),
+        ),
+        wr.ScalarChart(
+            title="Current Entropy",
+            metric="optim/entropy",
+            layout=wr.Layout(x=16, y=0, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Current policy uncertainty. Falling entropy means the model is becoming more decisive; too-low entropy can mean collapse.",
+            layout=wr.Layout(x=20, y=0, w=4, h=4),
+        ),
+        wr.ScalarChart(
+            title="Expert Token Utilization",
+            metric="e_frac_with_tokens:mean",
+            layout=wr.Layout(x=0, y=4, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Fraction of expert-parallel token slots carrying real sampled tokens. Compute-density signal, not language quality.",
+            layout=wr.Layout(x=4, y=4, w=4, h=4),
+        ),
+        wr.ScalarChart(
+            title="Target-Cree Character F1",
+            metric="slice/english_to_cree/char_f1",
+            layout=wr.Layout(x=8, y=4, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Spelling-level overlap when the target answer is Cree. Early useful signal, but weaker than exact match.",
+            layout=wr.Layout(x=12, y=4, w=4, h=4),
+        ),
+        wr.ScalarChart(
+            title="Target-Cree Exact Match",
+            metric="slice/english_to_cree/exact",
+            layout=wr.Layout(x=16, y=4, w=4, h=4),
+        ),
+        wr.MarkdownPanel(
+            markdown="Strict lookup correctness for English->Cree prompts. This is the hard channel that should eventually move.",
+            layout=wr.Layout(x=20, y=4, w=4, h=4),
+        ),
+    ]
+
     progress_panels: list[object] = []
     y = 0
     for title, metrics, desc in [
@@ -293,6 +350,8 @@ as language-learning metrics.
         blocks=[
             overview,
             wr.TableOfContents(),
+            wr.H2("At A Glance"),
+            wr.PanelGrid(runsets=[runset], panels=summary_panels),
             wr.H2("Explained Charts"),
             wr.PanelGrid(runsets=[runset], panels=progress_panels),
             glossary,
