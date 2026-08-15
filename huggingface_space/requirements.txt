@@ -1,6 +1,6 @@
-gradio==6.22.0
+gradio==6.23.1
 huggingface_hub<2.0
 python-dotenv>=1.2.2
-tinker==0.24.0
+tinker==0.25.0
 protobuf>=7.35.1,<8
 chz>=0.4.0
