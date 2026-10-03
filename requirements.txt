@@ -3,7 +3,7 @@
 # runtime with the readiness checks before paid extraction or RL runs.
 
 # Anthropic API for Claude Sonnet 4.6+ (primary VLM)
-anthropic>=1.8.0
+anthropic>=1.10.0
 
 # Google Gemini API for Q&A generation. Do not use the deprecated
 # google-generativeai package; it pulls protobuf constraints that conflict with
@@ -24,7 +24,7 @@ PyMuPDF>=1.28.2
 pypdf>=6.19.0
 
 # Dataset publishing and model hub integration
-huggingface-hub>=1.32.0
+huggingface-hub>=2.0.0
 
 # Environment variable management
 python-dotenv>=1.2.3
@@ -34,7 +34,7 @@ tqdm>=4.70.1
 
 # Weights & Biases for experiment tracking and logging
 wandb>=0.30.0
-weave>=0.53.9
+weave>=0.53.11
 
 # Thinking Machines / Tinker integration
 # Install RL/Tinker dependencies from requirements-tinker.txt after these base
