@@ -1,6 +1,6 @@
 gradio==6.30.0
 huggingface_hub<3.0
 python-dotenv>=1.2.4
-tinker==0.33.1
+tinker==0.34.0
 protobuf>=7.36.2,<8
 chz>=0.4.0
